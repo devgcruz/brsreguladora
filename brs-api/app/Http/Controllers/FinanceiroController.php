@@ -7,17 +7,13 @@ use App\Http\Requests\UpdateFinanceiroRequest;
 use App\Http\Resources\FinanceiroResource;
 use App\Models\Financeiro;
 use App\Models\Entrada;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class FinanceiroController extends Controller
 {
-    protected $auditService;
 
-    public function __construct(AuditService $auditService)
     {
-        $this->auditService = $auditService;
     }
 
     /**
@@ -46,7 +42,6 @@ class FinanceiroController extends Controller
 
         $financeiros = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $this->auditService->log('VIEW', 'FINANCEIRO', 'Listagem de dados financeiros', [
             'filtros' => $request->all()
         ], $request->user());
 
@@ -69,7 +64,6 @@ class FinanceiroController extends Controller
     {
         $financeiro->load('entrada');
 
-        $this->auditService->log('VIEW', 'FINANCEIRO', 'Visualização de dados financeiros', [
             'financeiro_id' => $financeiro->Id_Financeiro
         ], request()->user());
 
@@ -88,7 +82,6 @@ class FinanceiroController extends Controller
         
         $financeiro = Financeiro::create($data);
 
-        $this->auditService->log('CREATE', 'FINANCEIRO', 'Dados financeiros criados', [
             'financeiro_id' => $financeiro->Id_Financeiro,
             'entrada_id' => $financeiro->ID_ENTRADA
         ], $request->user());
@@ -110,7 +103,6 @@ class FinanceiroController extends Controller
         $dadosAnteriores = $financeiro->toArray();
         $financeiro->update($data);
 
-        $this->auditService->log('UPDATE', 'FINANCEIRO', 'Dados financeiros atualizados', [
             'financeiro_id' => $financeiro->Id_Financeiro,
             'dados_anteriores' => $dadosAnteriores,
             'dados_novos' => $financeiro->toArray()
@@ -133,7 +125,6 @@ class FinanceiroController extends Controller
 
         $financeiro->delete();
 
-        $this->auditService->log('DELETE', 'FINANCEIRO', 'Dados financeiros excluídos', [
             'financeiro_id' => $financeiroId,
             'entrada_id' => $entradaId
         ], request()->user());

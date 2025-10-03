@@ -7,17 +7,13 @@ use App\Http\Requests\UpdateJudicialRequest;
 use App\Http\Resources\JudicialResource;
 use App\Models\Judicial;
 use App\Models\Entrada;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class JudicialController extends Controller
 {
-    protected $auditService;
 
-    public function __construct(AuditService $auditService)
     {
-        $this->auditService = $auditService;
     }
 
     /**
@@ -50,7 +46,6 @@ class JudicialController extends Controller
 
         $judiciais = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $this->auditService->log('VIEW', 'JUDICIAL', 'Listagem de processos judiciais', [
             'filtros' => $request->all()
         ], $request->user());
 
@@ -73,7 +68,6 @@ class JudicialController extends Controller
     {
         $judicial->load(['entrada', 'diligencias']);
 
-        $this->auditService->log('VIEW', 'JUDICIAL', 'Visualização de processo judicial', [
             'judicial_id' => $judicial->Id_Judicial
         ], request()->user());
 
@@ -92,7 +86,6 @@ class JudicialController extends Controller
         
         $judicial = Judicial::create($data);
 
-        $this->auditService->log('CREATE', 'JUDICIAL', 'Processo judicial criado', [
             'judicial_id' => $judicial->Id_Judicial,
             'entrada_id' => $judicial->ID_ENTRADA,
             'numero_processo' => $judicial->NUM_PROCESSO
@@ -115,7 +108,6 @@ class JudicialController extends Controller
         $dadosAnteriores = $judicial->toArray();
         $judicial->update($data);
 
-        $this->auditService->log('UPDATE', 'JUDICIAL', 'Processo judicial atualizado', [
             'judicial_id' => $judicial->Id_Judicial,
             'dados_anteriores' => $dadosAnteriores,
             'dados_novos' => $judicial->toArray()
@@ -139,7 +131,6 @@ class JudicialController extends Controller
 
         $judicial->delete();
 
-        $this->auditService->log('DELETE', 'JUDICIAL', 'Processo judicial excluído', [
             'judicial_id' => $judicialId,
             'entrada_id' => $entradaId,
             'numero_processo' => $numeroProcesso

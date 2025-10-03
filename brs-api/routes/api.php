@@ -5,7 +5,6 @@ use App\Http\Controllers\EntradaController;
 use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\JudicialController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\PrestadorController;
 use App\Http\Controllers\PdfController;
 use Illuminate\Http\Request;
@@ -71,12 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/usuarios/statistics', [UsuarioController::class, 'statistics']);
     });
 
-    // Auditoria (temporariamente sem restrição de permissão para teste)
-    Route::get('/auditoria', [AuditoriaController::class, 'index']);
-    Route::get('/auditoria/{auditLog}', [AuditoriaController::class, 'show']);
-    Route::get('/auditoria/statistics', [AuditoriaController::class, 'statistics']);
-    Route::post('/auditoria/export', [AuditoriaController::class, 'export']);
-    Route::delete('/auditoria/clean-old', [AuditoriaController::class, 'cleanOldLogs']);
 });
 
 // Rota de teste

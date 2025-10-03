@@ -19,7 +19,6 @@ import {
   Business as PrestadoresIcon,
   Assessment as RelatoriosIcon,
   People as UsuariosIcon,
-  Security as AuditoriaIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import useAuthStore from '../store/authStore';
@@ -69,12 +68,6 @@ const menuItems = [
     path: '/dashboard/usuarios',
     permission: 'usuarios'
   },
-  {
-    text: 'Auditoria',
-    icon: <AuditoriaIcon />,
-    path: '/dashboard/auditoria',
-    permission: 'usuarios'
-  }
 ];
 
 const Sidebar = ({ open, onClose }) => {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Models\Usuario;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -13,12 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    protected $auditService;
-
-    public function __construct(AuditService $auditService)
-    {
-        $this->auditService = $auditService;
-    }
 
     /**
      * Login do usuário
@@ -34,10 +27,6 @@ class AuthController extends Controller
         \Log::info('👤 Usuário encontrado:', $usuario ? ['id' => $usuario->id, 'nome' => $usuario->nome] : 'Não encontrado');
 
         if (!$usuario || !Hash::check($credentials['senha'], $usuario->Senha)) {
-            $this->auditService->log('LOGIN', 'USUARIO', 'Tentativa de login falhada', [
-                'usuario' => $credentials['usuario'],
-                'ip' => $request->ip()
-            ]);
 
             throw ValidationException::withMessages([
                 'usuario' => ['As credenciais fornecidas estão incorretas.'],
@@ -45,10 +34,6 @@ class AuthController extends Controller
         }
 
         if ($usuario->status !== 'ativo') {
-            $this->auditService->log('LOGIN', 'USUARIO', 'Tentativa de login com usuário inativo', [
-                'usuario' => $credentials['usuario'],
-                'ip' => $request->ip()
-            ]);
 
             throw ValidationException::withMessages([
                 'usuario' => ['Sua conta está inativa. Entre em contato com o administrador.'],
@@ -61,10 +46,6 @@ class AuthController extends Controller
         // Criar token
         $token = $usuario->createToken('auth-token')->plainTextToken;
 
-        $this->auditService->log('LOGIN', 'USUARIO', 'Login realizado com sucesso', [
-            'usuario' => $usuario->Usuario,
-            'ip' => $request->ip()
-        ], $usuario);
 
         \Log::info('✅ Login bem-sucedido:', ['usuario' => $usuario->Usuario, 'token' => substr($token, 0, 20) . '...']);
 
@@ -93,10 +74,6 @@ class AuthController extends Controller
     {
         $usuario = $request->user();
 
-        $this->auditService->log('LOGOUT', 'USUARIO', 'Logout realizado', [
-            'usuario' => $usuario->Usuario,
-            'ip' => $request->ip()
-        ], $usuario);
 
         $request->user()->currentAccessToken()->delete();
 

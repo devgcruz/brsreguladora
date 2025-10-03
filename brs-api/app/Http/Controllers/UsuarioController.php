@@ -6,19 +6,12 @@ use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
 use App\Http\Resources\UsuarioResource;
 use App\Models\Usuario;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
-    protected $auditService;
-
-    public function __construct(AuditService $auditService)
-    {
-        $this->auditService = $auditService;
-    }
 
     /**
      * Listar usuários
@@ -46,9 +39,6 @@ class UsuarioController extends Controller
 
         $usuarios = $query->orderBy('nome')->paginate(15);
 
-        $this->auditService->log('VIEW', 'USUARIO', 'Listagem de usuários', [
-            'filtros' => $request->all()
-        ], $request->user());
 
         return response()->json([
             'success' => true,
@@ -67,10 +57,6 @@ class UsuarioController extends Controller
      */
     public function show(Usuario $usuario): JsonResponse
     {
-        $this->auditService->log('VIEW', 'USUARIO', 'Visualização de usuário', [
-            'usuario_id' => $usuario->id,
-            'usuario_nome' => $usuario->nome
-        ], request()->user());
 
         return response()->json([
             'success' => true,
@@ -87,11 +73,6 @@ class UsuarioController extends Controller
         
         $usuario = Usuario::create($data);
 
-        $this->auditService->log('CREATE', 'USUARIO', 'Usuário criado', [
-            'usuario_id' => $usuario->id,
-            'usuario_nome' => $usuario->nome,
-            'usuario_login' => $usuario->Usuario
-        ], $request->user());
 
         return response()->json([
             'success' => true,
@@ -110,7 +91,6 @@ class UsuarioController extends Controller
         $dadosAnteriores = $usuario->toArray();
         $usuario->update($data);
 
-        $this->auditService->log('UPDATE', 'USUARIO', 'Usuário atualizado', [
             'usuario_id' => $usuario->id,
             'dados_anteriores' => $dadosAnteriores,
             'dados_novos' => $usuario->toArray()
@@ -134,7 +114,6 @@ class UsuarioController extends Controller
 
         $usuario->delete();
 
-        $this->auditService->log('DELETE', 'USUARIO', 'Usuário excluído', [
             'usuario_id' => $usuarioId,
             'usuario_nome' => $usuarioNome,
             'usuario_login' => $usuarioLogin
@@ -156,7 +135,6 @@ class UsuarioController extends Controller
         
         $usuario->update(['status' => $novoStatus]);
 
-        $this->auditService->log('UPDATE', 'USUARIO', 'Status do usuário alterado', [
             'usuario_id' => $usuario->id,
             'status_anterior' => $statusAnterior,
             'novo_status' => $novoStatus
@@ -188,7 +166,6 @@ class UsuarioController extends Controller
 
         $usuario->update(['Senha' => Hash::make($request->nova_senha)]);
 
-        $this->auditService->log('UPDATE', 'USUARIO', 'Senha do usuário alterada', [
             'usuario_id' => $usuario->id
         ], request()->user());
 

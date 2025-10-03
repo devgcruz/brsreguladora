@@ -15,7 +15,6 @@ import JudicialPage from './pages/JudicialPage';
 import PrestadoresPage from './pages/PrestadoresPage';
 import RelatoriosPage from './pages/RelatoriosPage';
 import UsuariosPage from './pages/UsuariosPage';
-import AuditoriaPage from './pages/AuditoriaPage';
 
 // Components
 import DashboardLayout from './components/DashboardLayout';
@@ -166,15 +165,6 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/dashboard/auditoria" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <PermissionRoute permission="usuarios">
-                  <AuditoriaPage />
-                </PermissionRoute>
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
           
           {/* Rota padrão */}
           <Route path="/" element={<Navigate to="/login" replace />} />

@@ -6,17 +6,13 @@ use App\Http\Requests\StorePrestadorRequest;
 use App\Http\Requests\UpdatePrestadorRequest;
 use App\Http\Resources\PrestadorResource;
 use App\Models\Prestador;
-use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PrestadorController extends Controller
 {
-    protected $auditService;
 
-    public function __construct(AuditService $auditService)
     {
-        $this->auditService = $auditService;
     }
 
     /**
@@ -77,7 +73,6 @@ class PrestadorController extends Controller
 
             $prestador = Prestador::create($data);
 
-            $this->auditService->log(
                 'CREATE',
                 'PRESTADOR',
                 'Prestador criado',
@@ -135,7 +130,6 @@ class PrestadorController extends Controller
 
             $prestador->update($data);
 
-            $this->auditService->log(
                 'UPDATE',
                 'PRESTADOR',
                 'Prestador atualizado',
@@ -167,7 +161,6 @@ class PrestadorController extends Controller
             
             $prestador->delete();
 
-            $this->auditService->log(
                 'DELETE',
                 'PRESTADOR',
                 'Prestador deletado',

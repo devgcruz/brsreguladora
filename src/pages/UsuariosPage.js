@@ -193,7 +193,6 @@ const UsuariosPage = memo(() => {
         delete dadosAtualizacao.senha;
       }
       
-      // Usar o userService para registrar a auditoria
       const usuarioAtualizado = userService.updateUser(usuarioEditando.id, dadosAtualizacao);
       
       if (usuarioAtualizado) {

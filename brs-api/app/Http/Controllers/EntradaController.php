@@ -6,7 +6,6 @@ use App\Http\Requests\StoreEntradaRequest;
 use App\Http\Requests\UpdateEntradaRequest;
 use App\Http\Resources\EntradaResource;
 use App\Models\Entrada;
-use App\Services\AuditService;
 use App\Services\EntradaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -14,12 +13,10 @@ use Illuminate\Http\JsonResponse;
 class EntradaController extends Controller
 {
     protected $entradaService;
-    protected $auditService;
 
-    public function __construct(EntradaService $entradaService, AuditService $auditService)
+    public function __construct(EntradaService $entradaService)
     {
         $this->entradaService = $entradaService;
-        $this->auditService = $auditService;
     }
 
     /**
@@ -87,9 +84,6 @@ class EntradaController extends Controller
         $entradaIds = $entradas->pluck('Id_Entrada')->toArray();
         \Log::info('🆔 IDs das entradas na página atual:', $entradaIds);
 
-        $this->auditService->log('VIEW', 'REGISTRO', 'Listagem de registros de entrada', [
-            'filtros' => $request->all()
-        ], $request->user());
 
         $response = [
             'success' => true,
@@ -114,9 +108,6 @@ class EntradaController extends Controller
     {
         $entrada->load(['colaborador', 'financeiro', 'judicial', 'pdfs']);
 
-        $this->auditService->log('VIEW', 'REGISTRO', 'Visualização de registro de entrada', [
-            'entrada_id' => $entrada->Id_Entrada
-        ], request()->user());
 
         return response()->json([
             'success' => true,
@@ -169,10 +160,6 @@ class EntradaController extends Controller
             'veiculo' => $entrada->VEICULO
         ]);
 
-        $this->auditService->log('CREATE', 'REGISTRO', 'Novo registro de entrada criado', [
-            'entrada_id' => $entrada->Id_Entrada,
-            'placa' => $entrada->PLACA
-        ], $request->user());
 
         $response = [
             'success' => true,
@@ -220,11 +207,6 @@ class EntradaController extends Controller
         $entradaAnterior = $entrada->toArray();
         $entrada = $this->entradaService->updateEntrada($entrada, $data);
 
-        $this->auditService->log('UPDATE', 'REGISTRO', 'Registro de entrada atualizado', [
-            'entrada_id' => $entrada->Id_Entrada,
-            'dados_anteriores' => $entradaAnterior,
-            'dados_novos' => $entrada->toArray()
-        ], $request->user());
 
         return response()->json([
             'success' => true,
@@ -243,10 +225,6 @@ class EntradaController extends Controller
 
         $this->entradaService->deleteEntrada($entrada);
 
-        $this->auditService->log('DELETE', 'REGISTRO', 'Registro de entrada excluído', [
-            'entrada_id' => $entradaId,
-            'placa' => $placa
-        ], request()->user());
 
         return response()->json([
             'success' => true,
