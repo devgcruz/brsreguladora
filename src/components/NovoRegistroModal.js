@@ -56,10 +56,26 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     loadColaboradores,
     loadCidadesSinistro,
     loadCidadesLocalizacao,
-    initializeData,
+    initializeDropdownValues,
     clearCache
   } = useOptimizedDropdowns();
   
+  // Carregar dados dos dropdowns quando o modal for aberto
+  useEffect(() => {
+    if (open) {
+      console.log('[NovoRegistroModal] Carregando dados dos dropdowns...');
+      // Carrega UFs e Colaboradores em paralelo
+      Promise.all([
+        loadUfs(),
+        loadColaboradores()
+      ]).then(() => {
+        console.log('[NovoRegistroModal] Dados dos dropdowns carregados com sucesso');
+      }).catch((error) => {
+        console.error('[NovoRegistroModal] Erro ao carregar dados dos dropdowns:', error);
+        setError('Erro ao carregar dados dos dropdowns');
+      });
+    }
+  }, [open, loadUfs, loadColaboradores]);
 
   const [formData, setFormData] = useState({
     protocolo: '',
@@ -146,28 +162,20 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     }
   }, [ufOptions, loadCidadesLocalizacao]);
 
-  // Carregar dados iniciais quando o modal abrir - PADRÃO DE CARREGAMENTO ESTRITAMENTE CONTROLADO
+  // Controlar estado de prontidão do formulário
   useEffect(() => {
     if (open) {
       setIsReady(false); // Reseta o estado de prontidão ao abrir
-
-      const initializeForm = async () => {
-        try {
-          // 1. Carrega TODAS as opções de dropdown primeiro
-          await initializeData();
-
-          // 2. Libera a renderização do formulário
-          setIsReady(true);
-
-        } catch (err) {
-          setError('Falha ao inicializar o formulário. Tente novamente.');
-          console.error("Initialization Error:", err);
-        }
-      };
-
-      initializeForm();
+      // Aguarda um pequeno delay para garantir que os dados foram carregados
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsReady(false);
     }
-  }, [open, initializeData]);
+  }, [open]);
 
   const tipos = useMemo(() => ['JUDICIAL', 'ADM'], []);
 
