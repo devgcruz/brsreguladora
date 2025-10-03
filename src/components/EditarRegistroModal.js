@@ -16,7 +16,7 @@ import {
   Skeleton,
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
-import OptimizedSelect from './OptimizedSelect';
+import GuardedSelect from './GuardedSelect'; // NOVO COMPONENTE ULTRA-SEGURO
 import {
   Close as CloseIcon,
   Save as SaveIcon,
@@ -28,67 +28,35 @@ import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
 
+// Estado inicial vazio para o formulário (apenas campos de texto)
+const initialState = {
+  protocolo: '', entrada: '', marca: '', veiculo: '', placa: '',
+  chassi: '', anoVeiculo: '', anoModelo: '', seguradora: '', codSinistro: '',
+  numeroBO: '', posicao: '', numeroProcesso: '', tipo: '', situacao: '', cor: '',
+  renavam: '', numeroMotor: '', comarca: '', numeroProcessoJudicial: '',
+  notaFiscal: '', numeroVara: '', dataPagamento: '', honorario: '',
+  nomeBanco: '', observacoes: ''
+};
+
 const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) => {
+  const [textFieldsData, setTextFieldsData] = useState(initialState); // Renomeado para clareza
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  // Hook otimizado para dropdowns
+  // Hook otimizado para dropdowns com estado centralizado
   const {
+    loading: dropdownsLoading,
+    dropdownValues,
+    handleDropdownChange,
+    initializeDropdownValues,
     ufOptions,
     cidadeSinistroOptions,
     cidadeLocalizacaoOptions,
-    colaboradorOptions,
-    loadingUfs,
-    loadingCidadesSinistro,
-    loadingCidadesLocalizacao,
-    loadingColaboradores,
-    initialized,
-    loadUfs,
-    loadColaboradores,
-    loadCidadesSinistro,
-    loadCidadesLocalizacao,
-    initializeData,
-    clearCache
+    colaboradorOptions
   } = useOptimizedDropdowns();
-
-  const [formData, setFormData] = useState({
-    protocolo: '',
-    entrada: '',
-    marca: '',
-    veiculo: '',
-    placa: '',
-    chassi: '',
-    anoVeiculo: '',
-    anoModelo: '',
-    seguradora: '',
-    codSinistro: '',
-    numeroBO: '',
-    ufSinistro: '',
-    cidadeSinistro: '',
-    colaborador: '',
-    posicao: '',
-    uf: '',
-    cidade: '',
-    numeroProcesso: '',
-    tipo: '',
-    situacao: '',
-    // Novos campos
-    cor: '',
-    renavam: '',
-    numeroMotor: '',
-    // Campos condicionais para tipo Judicial
-    comarca: '',
-    numeroProcessoJudicial: '',
-    notaFiscal: '',
-    numeroVara: '',
-    dataPagamento: '',
-    honorario: '',
-    nomeBanco: '',
-    observacoes: ''
-  });
 
   // Estado para observações em formato de posts
   const [observacoes, setObservacoes] = useState([]);
@@ -101,53 +69,9 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     severity: 'error'
   });
 
-  // Opções para campos de seleção - memoizadas para performance
-  const marcas = useMemo(() => ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Volkswagen', 'Fiat', 'Hyundai', 'Nissan', 'BMW', 'Mercedes-Benz'], []);
-  const seguradoras = useMemo(() => [
-    'Porto Seguro', 'SulAmérica', 'Bradesco Seguros', 'Itaú Seguros', 'Allianz', 'Zurich', 'HDI Seguros', 'Liberty Seguros',
-    'Azul Seguros' // Adicionar seguradora que está no banco
-  ], []);
-  // Handlers otimizados para mudança de UF
-  const handleUfSinistroChange = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      ufSinistro: value,
-      cidadeSinistro: ''
-    }));
-    
-    if (value) {
-      const ufSelecionada = ufOptions.find(uf => uf.value === value);
-      if (ufSelecionada) {
-        loadCidadesSinistro(ufSelecionada.value);
-      }
-    }
-  }, [ufOptions, loadCidadesSinistro]);
+  // Handlers antigos removidos - agora gerenciados pelo hook centralizado
 
-  const handleUfLocalizacaoChange = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      uf: value,
-      cidade: ''
-    }));
-    
-    if (value) {
-      const ufSelecionada = ufOptions.find(uf => uf.value === value);
-      if (ufSelecionada) {
-        loadCidadesLocalizacao(ufSelecionada.value);
-      }
-    }
-  }, [ufOptions, loadCidadesLocalizacao]);
-
-  // Carregar dados iniciais quando o modal abrir
-  useEffect(() => {
-    if (open) {
-      // Inicializar dados de forma otimizada
-      initializeData().catch(error => {
-        console.error('Erro ao inicializar dados:', error);
-        setError('Erro ao carregar dados iniciais');
-      });
-    }
-  }, [open, initializeData]);
+  // useEffect antigo removido - agora gerenciado pela nova arquitetura centralizada
 
 
   const posicoes = useMemo(() => [
@@ -161,12 +85,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     'CANCELADO',
     'Pátio A', // Adicionar posição que está no banco
     'Pátio B'
-  ], []);
-  const tipos = useMemo(() => [
-    'JUDICIAL', 
-    'ADM',
-    'Danos a Terceiros' // Adicionar tipo que está no banco
-  ], []);
+  ].map(p => ({ value: p, label: p })), []);
+
+  // Opções estáticas memoizadas
+  const marcas = useMemo(() => ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Volkswagen', 'Fiat', 'Hyundai', 'Nissan', 'BMW', 'Mercedes-Benz'].map(m => ({ value: m, label: m })), []);
+  const seguradoras = useMemo(() => ['Porto Seguro', 'SulAmérica', 'Bradesco Seguros', 'Itaú Seguros', 'Allianz', 'Zurich', 'HDI Seguros', 'Liberty Seguros', 'Azul Seguros'].map(s => ({ value: s, label: s })), []);
+  const tipos = useMemo(() => ['JUDICIAL', 'ADM', 'Danos a Terceiros'].map(t => ({ value: t, label: t })), []);
+
 
   // Função para garantir que valores sejam strings válidas
   const safeString = (value) => {
@@ -179,20 +104,19 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     return value;
   };
 
-  // ESTRATÉGIA FINAL: HIDRATAÇÃO GRANULAR E ESTADO INICIAL SEGURO
-
-  // 1. EFEITO DE INICIALIZAÇÃO SEGURA
+  // SOLUÇÃO ARQUITETURAL DEFINITIVA: ESTADO CENTRALIZADO
   useEffect(() => {
     if (open && registroData) {
-      // Dispara o carregamento das opções primárias
-      loadUfs();
-      loadColaboradores();
+      console.log('%c[Modal] INICIALIZANDO COM ARQUITETURA CENTRALIZADA', 'color: purple; font-weight: bold;');
+      
+      // O hook agora cuida de todo o carregamento e preenchimento dos selects
+      initializeDropdownValues(registroData);
 
-      // Popula o formData APENAS com campos que não são selects assíncronos
-      setFormData({
+      // O modal só se preocupa com os campos de texto
+      setTextFieldsData({
         protocolo: String(registroData.id || ''),
         entrada: registroData.data_entrada || '',
-        marca: String(registroData.marca || ''), // Select estático, seguro para definir
+        marca: String(registroData.marca || ''),
         veiculo: String(registroData.veiculo || ''),
         placa: String(registroData.placa || ''),
         chassi: String(registroData.chassi || ''),
@@ -201,15 +125,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         seguradora: String(registroData.seguradora || ''),
         codSinistro: String(registroData.cod_sinistro || ''),
         numeroBO: String(registroData.numero_bo || ''),
-        posicao: String(registroData.posicao || ''), // Select estático, seguro
+        posicao: String(registroData.posicao || ''),
         numeroProcesso: String(registroData.numero_processo || ''),
-        tipo: String(registroData.tipo || ''), // Select estático, seguro
+        tipo: String(registroData.tipo || ''),
         situacao: String(registroData.situacao || ''),
-        // Novos campos
         cor: String(registroData.cor || ''),
         renavam: String(registroData.renavam || ''),
         numeroMotor: String(registroData.numero_motor || ''),
-        // Campos condicionais para tipo Judicial
         comarca: String(registroData.comarca || ''),
         numeroProcessoJudicial: String(registroData.numero_processo_judicial || ''),
         notaFiscal: String(registroData.nota_fiscal || ''),
@@ -217,14 +139,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         dataPagamento: String(registroData.data_pagamento || ''),
         honorario: String(registroData.honorario || ''),
         nomeBanco: String(registroData.nome_banco || ''),
-        observacoes: String(registroData.observacoes || ''),
-
-        // IMPORTANTE: Deixe os campos de selects assíncronos VAZIOS
-        colaborador: '',
-        ufSinistro: '',
-        cidadeSinistro: '',
-        uf: '',
-        cidade: ''
+        observacoes: String(registroData.observacoes || '')
       });
 
       // Carregar observações existentes
@@ -233,69 +148,21 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       } else {
         setObservacoes([]);
       }
+    } else if (!open) {
+      setTextFieldsData(initialState); // Limpa ao fechar
     }
-  }, [open, registroData, loadUfs, loadColaboradores]);
-
-  // 2. EFEITOS DE HIDRATAÇÃO GRANULAR
-
-  // Hidrata 'colaborador'
-  useEffect(() => {
-    if (registroData?.colaborador && colaboradorOptions.length > 0) {
-      const nomeColaborador = registroData.colaborador.nome || registroData.colaborador.NOME;
-      if (nomeColaborador) {
-        setFormData(prev => ({ ...prev, colaborador: nomeColaborador }));
-      }
-    }
-  }, [registroData, colaboradorOptions]);
-
-  // Hidrata 'ufSinistro' e dispara carregamento de cidades
-  useEffect(() => {
-    if (registroData?.uf_sinistro && ufOptions.length > 0) {
-      setFormData(prev => ({ ...prev, ufSinistro: registroData.uf_sinistro }));
-      loadCidadesSinistro(registroData.uf_sinistro);
-    }
-  }, [registroData, ufOptions, loadCidadesSinistro]);
-
-  // Hidrata 'cidadeSinistro'
-  useEffect(() => {
-    if (registroData?.cidade_sinistro && cidadeSinistroOptions.length > 0) {
-      setFormData(prev => ({ ...prev, cidadeSinistro: registroData.cidade_sinistro }));
-    }
-  }, [registroData, cidadeSinistroOptions]);
-
-  // Hidrata 'uf' (localização) e dispara carregamento de cidades
-  useEffect(() => {
-    if (registroData?.uf && ufOptions.length > 0) {
-      setFormData(prev => ({ ...prev, uf: registroData.uf }));
-      loadCidadesLocalizacao(registroData.uf);
-    }
-  }, [registroData, ufOptions, loadCidadesLocalizacao]);
-
-  // Hidrata 'cidade' (localização)
-  useEffect(() => {
-    if (registroData?.cidade && cidadeLocalizacaoOptions.length > 0) {
-      setFormData(prev => ({ ...prev, cidade: registroData.cidade }));
-    }
-  }, [registroData, cidadeLocalizacaoOptions]);
+  }, [open, registroData, initializeDropdownValues]);
 
 
-  const handleInputChange = useCallback((field) => (eventOrValue) => {
-    const value = (eventOrValue && typeof eventOrValue === 'object' && 'target' in eventOrValue)
-      ? eventOrValue.target.value
-      : eventOrValue;
+  // Handler para os campos de TEXTO
+  const handleTextFieldChange = useCallback((field) => (event) => {
+    setTextFieldsData(prev => ({ ...prev, [field]: event.target.value }));
+  }, []);
 
-    // Usar handlers específicos para UFs
-    if (field === 'ufSinistro') {
-      handleUfSinistroChange(value);
-    } else if (field === 'uf') {
-      handleUfLocalizacaoChange(value);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
-  }, [handleUfSinistroChange, handleUfLocalizacaoChange]);
+  // Handler para os DROPDOWNS vindo do hook
+  const handleSelectChange = useCallback((field) => (event) => {
+    handleDropdownChange(field, event.target.value);
+  }, [handleDropdownChange]);
 
   // Função para adicionar nova observação
   const adicionarObservacao = useCallback(() => {
@@ -375,48 +242,51 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       setError('');
       setSuccess('');
       
+      // Combinar os dois estados
+      const finalData = { ...textFieldsData, ...dropdownValues };
+      
       // Validação básica
-      if (!formData.protocolo || !formData.entrada || !formData.marca || !formData.veiculo) {
+      if (!finalData.protocolo || !finalData.entrada || !finalData.marca || !finalData.veiculo) {
         throw new Error('Por favor, preencha os campos obrigatórios');
       }
 
       // Preparar dados para a API
       const dadosParaAPI = {
-        ID_COLABORADOR: formData.colaborador ? colaboradorOptions.find(c => c && c.label === formData.colaborador)?.id : null,
-        DATA_ENTRADA: formData.entrada,
-        MARCA: formData.marca,
-        VEICULO: formData.veiculo,
-        PLACA: formData.placa,
-        CHASSI: formData.chassi,
-        ANO_VEIC: formData.anoVeiculo,
-        COD_SINISTRO: formData.codSinistro,
-        NUM_BO: formData.numeroBO,
-        UF_SINISTRO: formData.ufSinistro,
-        CIDADE_SINISTRO: formData.cidadeSinistro,
-        SEGURADORA: formData.seguradora,
-        POSICAO: formData.posicao,
-        SITUACAO: formData.situacao,
-        UF: formData.uf,
-        CIDADE: formData.cidade,
-        MES: new Date(formData.entrada).toLocaleDateString('pt-BR', { month: 'long' }),
-        TIPO: formData.tipo,
-        ANO_MODELO: formData.anoModelo,
-        COR_VEICULO: formData.corVeiculo,
-        PROTOCOLO: formData.protocolo,
-        NUMERO_PROCESSO: formData.numeroProcesso,
+        ID_COLABORADOR: finalData.colaborador ? colaboradorOptions.find(c => c && c.label === finalData.colaborador)?.id : null,
+        DATA_ENTRADA: finalData.entrada,
+        MARCA: finalData.marca,
+        VEICULO: finalData.veiculo,
+        PLACA: finalData.placa,
+        CHASSI: finalData.chassi,
+        ANO_VEIC: finalData.anoVeiculo,
+        COD_SINISTRO: finalData.codSinistro,
+        NUM_BO: finalData.numeroBO,
+        UF_SINISTRO: finalData.ufSinistro,
+        CIDADE_SINISTRO: finalData.cidadeSinistro,
+        SEGURADORA: finalData.seguradora,
+        POSICAO: finalData.posicao,
+        SITUACAO: finalData.situacao,
+        UF: finalData.uf,
+        CIDADE: finalData.cidade,
+        MES: new Date(finalData.entrada).toLocaleDateString('pt-BR', { month: 'long' }),
+        TIPO: finalData.tipo,
+        ANO_MODELO: finalData.anoModelo,
+        COR_VEICULO: finalData.corVeiculo,
+        PROTOCOLO: finalData.protocolo,
+        NUMERO_PROCESSO: finalData.numeroProcesso,
         // Novos campos
-        COR: formData.cor,
-        RENAVAM: formData.renavam,
-        NUMERO_MOTOR: formData.numeroMotor,
+        COR: finalData.cor,
+        RENAVAM: finalData.renavam,
+        NUMERO_MOTOR: finalData.numeroMotor,
         // Campos condicionais para tipo Judicial
-        COMARCA: formData.comarca,
-        NUMERO_PROCESSO_JUDICIAL: formData.numeroProcessoJudicial,
-        NOTA_FISCAL: formData.notaFiscal,
-        NUMERO_VARA: formData.numeroVara,
-        DATA_PAGAMENTO: formData.dataPagamento,
-        HONORARIO: formData.honorario,
-        NOME_BANCO: formData.nomeBanco,
-        OBSERVACOES: formData.observacoes,
+        COMARCA: finalData.comarca,
+        NUMERO_PROCESSO_JUDICIAL: finalData.numeroProcessoJudicial,
+        NOTA_FISCAL: finalData.notaFiscal,
+        NUMERO_VARA: finalData.numeroVara,
+        DATA_PAGAMENTO: finalData.dataPagamento,
+        HONORARIO: finalData.honorario,
+        NOME_BANCO: finalData.nomeBanco,
+        OBSERVACOES: finalData.observacoes,
         // Observações em formato de posts
         OBSERVACOES_POSTS: observacoes
       };
@@ -455,57 +325,16 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     } finally {
       // Salvamento concluído
     }
-  }, [formData, onSave, colaboradorOptions, registroData, observacoes]);
+  }, [textFieldsData, dropdownValues, onSave, colaboradorOptions, registroData, observacoes]);
 
   const handleClose = useCallback(() => {
     // Resetar todos os campos para strings vazias para evitar mudança de controlado para não controlado
-    setFormData({
-      protocolo: '',
-      entrada: '',
-      marca: '',
-      veiculo: '',
-      placa: '',
-      chassi: '',
-      anoVeiculo: '',
-      anoModelo: '',
-      seguradora: '',
-      codSinistro: '',
-      numeroBO: '',
-      ufSinistro: '',
-      cidadeSinistro: '',
-      colaborador: '',
-      posicao: '',
-      uf: '',
-      cidade: '',
-      numeroProcesso: '',
-      tipo: '',
-      situacao: '',
-      // Novos campos
-      cor: '',
-      renavam: '',
-      numeroMotor: '',
-      // Campos condicionais para tipo Judicial
-      comarca: '',
-      numeroProcessoJudicial: '',
-      notaFiscal: '',
-      numeroVara: '',
-      dataPagamento: '',
-      honorario: '',
-      nomeBanco: '',
-      observacoes: '',
-      // Limpar campos auxiliares
-      _originalUfSinistro: '',
-      _originalCidadeSinistro: '',
-      _originalUf: '',
-      _originalCidade: ''
-    });
+    setTextFieldsData(initialState);
     setPdfModalOpen(false);
     setError('');
     setSuccess('');
     setObservacoes([]);
     setNovaObservacao('');
-    // Limpar cache dos dropdowns
-    clearCache();
     // Limpar estados de validação de placa
     setPlacaSnackbar({
       open: false,
@@ -513,7 +342,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       severity: 'error'
     });
     onClose();
-  }, [onClose, clearCache]);
+  }, [onClose]);
 
   // Estilo comum para campos de formulário
   const fieldSx = {
@@ -552,8 +381,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Protocolo"
-              value={safeValue(formData.protocolo)}
-              onChange={handleInputChange('protocolo')}
+              value={safeValue(textFieldsData.protocolo)}
+              onChange={handleTextFieldChange('protocolo')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -567,8 +396,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               fullWidth
               label="Data de Entrada"
               type="date"
-              value={formData.entrada}
-              onChange={handleInputChange('entrada')}
+              value={textFieldsData.entrada}
+              onChange={handleTextFieldChange('entrada')}
               InputLabelProps={{ shrink: true }}
               variant="outlined"
               size="small"
@@ -578,11 +407,11 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-                label="Marca"
-              value={formData.marca || ""}
-                onChange={handleInputChange('marca')}
-              options={marcas.map(marca => ({ value: marca, label: marca })).filter(opt => opt.value && opt.label)}
+            <GuardedSelect
+              label="Marca"
+              value={textFieldsData.marca || ""}
+              onChange={handleTextFieldChange('marca')}
+              options={marcas}
               sx={fieldSx}
             />
           </Grid>
@@ -591,8 +420,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Veículo"
-              value={formData.veiculo}
-              onChange={handleInputChange('veiculo')}
+              value={textFieldsData.veiculo}
+              onChange={handleTextFieldChange('veiculo')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -605,8 +434,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               fullWidth
               label="Placa"
               placeholder="Digite a placa..."
-              value={formData.placa}
-              onChange={handleInputChange('placa')}
+              value={textFieldsData.placa}
+              onChange={handleTextFieldChange('placa')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -618,8 +447,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Chassi"
-              value={formData.chassi}
-              onChange={handleInputChange('chassi')}
+              value={textFieldsData.chassi}
+              onChange={handleTextFieldChange('chassi')}
               variant="outlined"
               size="small"
               sx={fieldSx}
@@ -630,8 +459,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Cor"
-              value={formData.cor}
-              onChange={handleInputChange('cor')}
+              value={textFieldsData.cor}
+              onChange={handleTextFieldChange('cor')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -643,8 +472,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="RENAVAM"
-              value={formData.renavam}
-              onChange={handleInputChange('renavam')}
+              value={textFieldsData.renavam}
+              onChange={handleTextFieldChange('renavam')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -656,8 +485,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Número do Motor"
-              value={formData.numeroMotor}
-              onChange={handleInputChange('numeroMotor')}
+              value={textFieldsData.numeroMotor}
+              onChange={handleTextFieldChange('numeroMotor')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -670,8 +499,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               fullWidth
               label="Ano do Veículo"
               type="number"
-              value={formData.anoVeiculo}
-              onChange={handleInputChange('anoVeiculo')}
+              value={textFieldsData.anoVeiculo}
+              onChange={handleTextFieldChange('anoVeiculo')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -685,8 +514,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               fullWidth
               label="Ano do Modelo"
               type="number"
-              value={formData.anoModelo}
-              onChange={handleInputChange('anoModelo')}
+              value={textFieldsData.anoModelo}
+              onChange={handleTextFieldChange('anoModelo')}
               variant="outlined"
               size="small"
               autoComplete="off"
@@ -713,11 +542,11 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-                label="Seguradora"
-              value={formData.seguradora || ""}
-                onChange={handleInputChange('seguradora')}
-              options={seguradoras.map(seguradora => ({ value: seguradora, label: seguradora })).filter(opt => opt.value && opt.label)}
+            <GuardedSelect
+              label="Seguradora"
+              value={textFieldsData.seguradora || ""}
+              onChange={handleTextFieldChange('seguradora')}
+              options={seguradoras}
               sx={fieldSx}
             />
           </Grid>
@@ -726,8 +555,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Código do Sinistro"
-              value={formData.codSinistro}
-              onChange={handleInputChange('codSinistro')}
+              value={textFieldsData.codSinistro}
+              onChange={handleTextFieldChange('codSinistro')}
               variant="outlined"
               size="small"
               sx={fieldSx}
@@ -738,8 +567,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Número B.O."
-              value={formData.numeroBO}
-              onChange={handleInputChange('numeroBO')}
+              value={textFieldsData.numeroBO}
+              onChange={handleTextFieldChange('numeroBO')}
               variant="outlined"
               size="small"
               sx={fieldSx}
@@ -747,33 +576,28 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              key={`uf-sinistro-${ufOptions.length}`}
+            <GuardedSelect
               label="UF do Sinistro"
-              value={formData.ufSinistro || ""}
-              onChange={handleUfSinistroChange}
+              value={dropdownValues.ufSinistro || ""}
+              onChange={handleSelectChange('ufSinistro')}
               options={ufOptions || []}
-              loading={loadingUfs}
+              loading={dropdownsLoading}
               loadingMessage="Carregando UFs..."
               emptyMessage="Nenhuma UF disponível"
-              searchable={ufOptions.length > 10}
-              disabled={false}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              key={`cidade-sinistro-${cidadeSinistroOptions.length}`}
+            <GuardedSelect
               label="Cidade do Sinistro"
-              value={formData.cidadeSinistro || ""}
-              onChange={handleInputChange('cidadeSinistro')}
+              value={dropdownValues.cidadeSinistro || ""}
+              onChange={handleSelectChange('cidadeSinistro')}
               options={cidadeSinistroOptions || []}
-              loading={loadingCidadesSinistro}
-              disabled={!formData.ufSinistro}
+              loading={dropdownsLoading}
+              disabled={!dropdownValues.ufSinistro}
               loadingMessage="Carregando cidades..."
-              emptyMessage={!formData.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              searchable={cidadeSinistroOptions.length > 10}
+              emptyMessage={!dropdownValues.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               sx={fieldSx}
             />
           </Grid>
@@ -796,58 +620,51 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              key={`colaborador-${colaboradorOptions.length}`}
+            <GuardedSelect
               label="Colaborador"
-              value={formData.colaborador || ""}
-              onChange={handleInputChange('colaborador')}
+              value={dropdownValues.colaborador || ""}
+              onChange={handleSelectChange('colaborador')}
               options={colaboradorOptions || []}
-              loading={loadingColaboradores}
+              loading={dropdownsLoading}
               loadingMessage="Carregando colaboradores..."
               emptyMessage="Nenhum colaborador encontrado"
-              searchable={colaboradorOptions.length > 10}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-                label="Posição"
-              value={formData.posicao || ""}
-                onChange={handleInputChange('posicao')}
-              options={posicoes.map(posicao => ({ value: posicao, label: posicao })).filter(opt => opt.value && opt.label)}
+            <GuardedSelect
+              label="Posição"
+              value={textFieldsData.posicao || ""}
+              onChange={handleTextFieldChange('posicao')}
+              options={posicoes}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              key={`uf-localizacao-${ufOptions.length}`}
+            <GuardedSelect
               label="UF (Localização)"
-              value={formData.uf || ""}
-              onChange={handleUfLocalizacaoChange}
+              value={dropdownValues.uf || ""}
+              onChange={handleSelectChange('uf')}
               options={ufOptions || []}
-              loading={loadingUfs}
+              loading={dropdownsLoading}
               loadingMessage="Carregando UFs..."
               emptyMessage="Nenhuma UF disponível"
-              searchable={ufOptions.length > 10}
-              disabled={false}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              key={`cidade-localizacao-${cidadeLocalizacaoOptions.length}`}
+            <GuardedSelect
               label="Cidade (Localização)"
-              value={formData.cidade || ""}
-              onChange={handleInputChange('cidade')}
+              value={dropdownValues.cidade || ""}
+              onChange={handleSelectChange('cidade')}
               options={cidadeLocalizacaoOptions || []}
-              loading={loadingCidadesLocalizacao}
-              disabled={!formData.uf}
+              loading={dropdownsLoading}
+              disabled={!dropdownValues.uf}
               loadingMessage="Carregando cidades..."
-              emptyMessage={!formData.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              searchable={cidadeLocalizacaoOptions.length > 10}
+              emptyMessage={!dropdownValues.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               sx={fieldSx}
             />
           </Grid>
@@ -856,8 +673,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Número do Processo"
-              value={formData.numeroProcesso}
-              onChange={handleInputChange('numeroProcesso')}
+              value={textFieldsData.numeroProcesso}
+              onChange={handleTextFieldChange('numeroProcesso')}
               variant="outlined"
               size="small"
               sx={fieldSx}
@@ -865,17 +682,17 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
+            <GuardedSelect
               label="Tipo"
-              value={formData.tipo || ""}
-              onChange={handleInputChange('tipo')}
-              options={tipos.map(tipo => ({ value: tipo, label: tipo })).filter(opt => opt.value && opt.label)}
+              value={textFieldsData.tipo || ""}
+              onChange={handleTextFieldChange('tipo')}
+              options={tipos}
               sx={fieldSx}
             />
           </Grid>
 
           {/* Seção Condicional: Dados Judiciais */}
-          {formData.tipo === 'JUDICIAL' && (
+          {textFieldsData.tipo === 'JUDICIAL' && (
             <>
               <Grid item xs={12}>
                 <Typography 
@@ -897,8 +714,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="Comarca"
-                  value={formData.comarca}
-                  onChange={handleInputChange('comarca')}
+                  value={textFieldsData.comarca}
+                  onChange={handleTextFieldChange('comarca')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -909,8 +726,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="N° Processo"
-                  value={formData.numeroProcessoJudicial}
-                  onChange={handleInputChange('numeroProcessoJudicial')}
+                  value={textFieldsData.numeroProcessoJudicial}
+                  onChange={handleTextFieldChange('numeroProcessoJudicial')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -921,8 +738,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="Nota Fiscal"
-                  value={formData.notaFiscal}
-                  onChange={handleInputChange('notaFiscal')}
+                  value={textFieldsData.notaFiscal}
+                  onChange={handleTextFieldChange('notaFiscal')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -933,8 +750,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="N° Vara"
-                  value={formData.numeroVara}
-                  onChange={handleInputChange('numeroVara')}
+                  value={textFieldsData.numeroVara}
+                  onChange={handleTextFieldChange('numeroVara')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -946,8 +763,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                   fullWidth
                   label="DT Pagto"
                   type="date"
-                  value={formData.dataPagamento}
-                  onChange={handleInputChange('dataPagamento')}
+                  value={textFieldsData.dataPagamento}
+                  onChange={handleTextFieldChange('dataPagamento')}
                   InputLabelProps={{ shrink: true }}
                   variant="outlined"
                   size="small"
@@ -959,8 +776,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="Honorário"
-                  value={formData.honorario}
-                  onChange={handleInputChange('honorario')}
+                  value={textFieldsData.honorario}
+                  onChange={handleTextFieldChange('honorario')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -971,8 +788,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 <TextField
                   fullWidth
                   label="Nome Banco"
-                  value={formData.nomeBanco}
-                  onChange={handleInputChange('nomeBanco')}
+                  value={textFieldsData.nomeBanco}
+                  onChange={handleTextFieldChange('nomeBanco')}
                   variant="outlined"
                   size="small"
                   sx={fieldSx}
@@ -1231,7 +1048,14 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Alert>
         )}
 
-        {renderFormContent()}
+        {dropdownsLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <CircularProgress />
+            <Typography sx={{ ml: 2 }}>Carregando dados...</Typography>
+          </Box>
+        ) : (
+          renderFormContent()
+        )}
       </DialogContent>
 
       <DialogActions sx={{ 
@@ -1336,9 +1160,9 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             color="text.secondary"
             sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
           >
-            <strong>Protocolo:</strong> {formData.protocolo}<br/>
-            <strong>Veículo:</strong> {formData.veiculo}<br/>
-            <strong>Placa:</strong> {formData.placa}
+            <strong>Protocolo:</strong> {textFieldsData.protocolo}<br/>
+            <strong>Veículo:</strong> {textFieldsData.veiculo}<br/>
+            <strong>Placa:</strong> {textFieldsData.placa}
           </Typography>
           <Alert severity="warning" sx={{ mt: 2 }}>
             Esta ação não pode ser desfeita!

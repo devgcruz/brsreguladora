@@ -56,6 +56,19 @@ const OptimizedSelect = forwardRef(({
   sx = {},
   ...props
 }, ref) => {
+  // =================== INÍCIO DOS LOGS DE DIAGNÓSTICO ===================
+  console.log(
+    `[OptimizedSelect: ${label}] RENDERIZANDO`,
+    {
+      "Valor Recebido (value)": value,
+      "Nº de Opções (options.length)": options.length,
+      "Opções Disponíveis": options.map(o => o.value),
+      "Loading": loading,
+      "Disabled": disabled
+    }
+  );
+  // ==================== FIM DOS LOGS DE DIAGNÓSTICO ====================
+
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
@@ -222,27 +235,31 @@ const OptimizedSelect = forwardRef(({
 
   // Validar se o valor existe nas opções disponíveis
   const safeValue = useMemo(() => {
-    // =================== GUARDA MESTRA ===================
+    // =================== GUARDA MESTRA DEFINITIVA ===================
     // Se as opções não estiverem prontas, NUNCA retorne um valor.
-    // Isso resolve a condição de corrida de forma definitiva.
+    // Isso resolve a condição de corrida de forma definitiva, pois o Select
+    // interno receberá '' (string vazia), que é sempre um valor válido.
     if (!Array.isArray(options) || options.length === 0) {
+      console.log(`[OptimizedSelect: ${label}] BLOQUEADO PELA GUARDA MESTRA. Opções indisponíveis.`);
       return multiple ? [] : '';
     }
-    // =======================================================
+    // =================================================================
 
     if (multiple) {
       if (!Array.isArray(value)) return [];
-      return value.filter(val => 
-        options.some(opt => getOptionValue(opt) === val)
-      );
+      return value.filter(val => options.some(opt => getOptionValue(opt) === val));
     }
 
     if (!value) return '';
 
     const valueExists = options.some(opt => getOptionValue(opt) === value);
 
+    if (!valueExists) {
+      console.warn(`[OptimizedSelect: ${label}] Valor "${value}" não encontrado nas opções. Retornando ''.`);
+    }
+
     return valueExists ? value : '';
-  }, [value, options, multiple, getOptionValue]);
+  }, [value, options, multiple, getOptionValue, label]);
 
   // Renderizar valor selecionado para múltipla seleção
   const renderValue = useCallback((selected) => {
