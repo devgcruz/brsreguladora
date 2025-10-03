@@ -63,7 +63,6 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
   // Carregar dados dos dropdowns quando o modal for aberto
   useEffect(() => {
     if (open) {
-      console.log('[NovoRegistroModal] Carregando dados dos dropdowns...');
       // Carrega UFs e Colaboradores em paralelo
       Promise.all([
         loadUfs(),

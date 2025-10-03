@@ -45,13 +45,11 @@ export const useOptimizedDropdowns = () => {
   // Função para carregar UFs (dados fixos do JSON)
   const loadUfs = useCallback(async () => {
     try {
-      console.log('[useOptimizedDropdowns] Carregando UFs...');
       const response = optimizedUfCidadeService.getUfs();
       
       if (response.success && Array.isArray(response.data)) {
         setUfs(response.data);
         cacheRef.current.ufs = response.data;
-        console.log('[useOptimizedDropdowns] UFs carregadas:', response.data.length);
       } else {
         setUfs([]);
       }
@@ -69,13 +67,11 @@ export const useOptimizedDropdowns = () => {
       if (cachedColaboradores && cachedColaboradores.length > 0) {
         setColaboradores(cachedColaboradores);
         cacheRef.current.colaboradores = cachedColaboradores;
-        console.log('[useOptimizedDropdowns] Colaboradores carregados do cache:', cachedColaboradores.length);
         return;
       }
     }
 
     try {
-      console.log('[useOptimizedDropdowns] Carregando colaboradores da API...');
       const response = await prestadorService.getPrestadores();
       
       if (response.success && Array.isArray(response.data)) {
@@ -88,7 +84,6 @@ export const useOptimizedDropdowns = () => {
         
         // Salvar no cache
         cacheService.setColaboradores(colaboradoresValidos);
-        console.log('[useOptimizedDropdowns] Colaboradores carregados da API:', colaboradoresValidos.length);
       } else {
         setColaboradores([]);
       }
@@ -106,13 +101,11 @@ export const useOptimizedDropdowns = () => {
     }
 
     try {
-      console.log(`[useOptimizedDropdowns] Carregando cidades do sinistro para UF: ${ufId}`);
       const response = await optimizedUfCidadeService.getCidadesByUf(ufId);
       
       if (response.success && Array.isArray(response.data)) {
         const validData = response.data.filter(item => item && typeof item === 'object' && (item.value || item.id));
         setCidadesSinistro(validData);
-        console.log(`[useOptimizedDropdowns] Cidades do sinistro carregadas: ${validData.length}`);
       } else {
         setCidadesSinistro([]);
       }
@@ -130,13 +123,11 @@ export const useOptimizedDropdowns = () => {
     }
 
     try {
-      console.log(`[useOptimizedDropdowns] Carregando cidades de localização para UF: ${ufId}`);
       const response = await optimizedUfCidadeService.getCidadesByUf(ufId);
       
       if (response.success && Array.isArray(response.data)) {
         const validData = response.data.filter(item => item && typeof item === 'object' && (item.value || item.id));
         setCidadesLocalizacao(validData);
-        console.log(`[useOptimizedDropdowns] Cidades de localização carregadas: ${validData.length}`);
       } else {
         setCidadesLocalizacao([]);
       }
@@ -148,7 +139,6 @@ export const useOptimizedDropdowns = () => {
 
   // === INÍCIO DA MUDANÇA: MANIPULADORES (HANDLERS) CENTRALIZADOS ===
   const handleChange = useCallback((field, value) => {
-    console.log(`[useOptimizedDropdowns] Mudança no campo ${field}: ${value}`);
     setValues(prev => ({ ...prev, [field]: value }));
 
     // Lógica de dependência
@@ -166,14 +156,12 @@ export const useOptimizedDropdowns = () => {
   const initializeValues = useCallback(async (registroData) => {
     if (!registroData) return;
     
-    console.log('%c[useOptimizedDropdowns] INICIALIZANDO VALORES DOS DROPDOWNS', 'color: purple; font-weight: bold;', registroData);
     setLoading(true);
     
     try {
       const ufSinistro = registroData.uf_sinistro || '';
       const ufLocalizacao = registroData.uf || '';
 
-      console.log('[useOptimizedDropdowns] Carregando todas as opções necessárias...');
       // Carrega todas as opções necessárias em paralelo
       await Promise.all([
         loadUfs(),
@@ -182,7 +170,6 @@ export const useOptimizedDropdowns = () => {
         ufLocalizacao ? loadCidadesLocalizacao(ufLocalizacao) : Promise.resolve(),
       ]);
 
-      console.log('[useOptimizedDropdowns] Definindo valores dos dropdowns...');
       // Define os valores DEPOIS que tudo foi carregado
       setValues({
         ufSinistro: ufSinistro,
@@ -191,8 +178,6 @@ export const useOptimizedDropdowns = () => {
         cidade: registroData.cidade || '',
         colaborador: registroData.colaborador?.nome || registroData.colaborador?.NOME || '',
       });
-      
-      console.log('%c[useOptimizedDropdowns] VALORES DOS DROPDOWNS DEFINIDOS', 'color: green; font-weight: bold;');
     } catch (error) {
       console.error("Erro ao inicializar valores dos dropdowns:", error);
     } finally {

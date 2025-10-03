@@ -107,8 +107,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   // SOLUÇÃO ARQUITETURAL DEFINITIVA: ESTADO CENTRALIZADO
   useEffect(() => {
     if (open && registroData) {
-      console.log('%c[Modal] INICIALIZANDO COM ARQUITETURA CENTRALIZADA', 'color: purple; font-weight: bold;');
-      
       // O hook agora cuida de todo o carregamento e preenchimento dos selects
       initializeDropdownValues(registroData);
 
