@@ -35,7 +35,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dadosOriginaisCarregados, setDadosOriginaisCarregados] = useState(false);
-  const [formLoading, setFormLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   
   // Hook otimizado para dropdowns
   const {
@@ -220,7 +220,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   useEffect(() => {
     if (open && registroData) {
       const initializeForm = async () => {
-        setFormLoading(true);
+        setLoading(true);
         try {
           // Carrega tudo em paralelo
           await Promise.all([
@@ -286,7 +286,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           setError('Falha ao inicializar o formulário.');
           console.error("Initialization Error:", err);
         } finally {
-          setFormLoading(false);
+          setLoading(false);
         }
       };
 
@@ -388,7 +388,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
   const handleSave = useCallback(async () => {
     try {
-      setFormLoading(true);
+      setLoading(true);
       setError('');
       setSuccess('');
       
@@ -470,7 +470,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       console.error('Erro ao atualizar registro:', err);
       setError(err.message || 'Erro ao atualizar registro');
     } finally {
-      setFormLoading(false);
+      setLoading(false);
     }
   }, [formData, onSave, colaboradorOptions, registroData, observacoes]);
 
@@ -1191,7 +1191,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             onClick={handleOpenDeleteDialog} 
             size="small"
             color="error"
-            disabled={formLoading || deleting}
+            disabled={loading || deleting}
             title="Excluir registro"
             sx={{ 
               p: { xs: 0.5, sm: 1 },
@@ -1244,17 +1244,9 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Alert>
         )}
 
-        {formLoading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%" minHeight="400px">
-            <Box textAlign="center">
-              <CircularProgress size={60} />
-              <Typography variant="h6" sx={{ mt: 2 }}>
-                Carregando formulário...
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Aguarde enquanto os dados são carregados
-              </Typography>
-            </Box>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <CircularProgress />
           </Box>
         ) : (
           renderFormContent()
@@ -1276,7 +1268,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           onClick={handleOpenPdfModal}
           variant="outlined"
           startIcon={<AttachFileIcon />}
-          disabled={formLoading}
+          disabled={loading}
           sx={{ 
             mr: { xs: 0, sm: 'auto' },
             mb: { xs: 1, sm: 0 },
@@ -1297,7 +1289,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           <Button
             onClick={handleClose}
             variant="outlined"
-            disabled={formLoading}
+            disabled={loading}
             sx={{
               fontSize: { xs: '0.8rem', sm: '0.875rem' },
               py: { xs: 1, sm: 1.5 }
@@ -1309,14 +1301,14 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           <Button
             onClick={handleSave}
             variant="contained"
-            startIcon={formLoading ? <CircularProgress size={20} /> : <SaveIcon />}
-            disabled={formLoading}
+            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+            disabled={loading}
             sx={{
               fontSize: { xs: '0.8rem', sm: '0.875rem' },
               py: { xs: 1, sm: 1.5 }
             }}
           >
-            {formLoading ? 'Salvando...' : 'Salvar Alterações'}
+            {loading ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </Box>
       </DialogActions>
