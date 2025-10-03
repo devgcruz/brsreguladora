@@ -34,8 +34,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [dadosOriginaisCarregados, setDadosOriginaisCarregados] = useState(false);
-  const [loading, setLoading] = useState(true);
   
   // Hook otimizado para dropdowns
   const {
@@ -151,41 +149,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     }
   }, [open, initializeData]);
 
-  // Carregar e definir dados originais de forma otimizada (executar apenas uma vez)
-  useEffect(() => {
-    if (ufOptions.length > 0 && formData._originalUfSinistro && formData._originalUf && !dadosOriginaisCarregados) {
-      const ufSinistroSelecionada = ufOptions.find(uf => uf.value === formData._originalUfSinistro);
-      const ufLocalizacaoSelecionada = ufOptions.find(uf => uf.value === formData._originalUf);
-      
-      if (ufSinistroSelecionada && ufLocalizacaoSelecionada) {
-        // Marcar como carregando para evitar múltiplas execuções
-        setDadosOriginaisCarregados(true);
-        
-        // Carregar cidades em paralelo
-        Promise.all([
-          loadCidadesSinistro(ufSinistroSelecionada.id),
-          loadCidadesLocalizacao(ufLocalizacaoSelecionada.id)
-        ]).then(() => {
-          // Uma única atualização do formData com todos os valores
-          setFormData(prev => ({
-            ...prev,
-            ufSinistro: formData._originalUfSinistro,
-            uf: formData._originalUf,
-            cidadeSinistro: formData._originalCidadeSinistro,
-            cidade: formData._originalCidade
-          }));
-        }).catch(error => {
-          console.error('Erro ao carregar dados originais:', error);
-          // Em caso de erro, definir pelo menos as UFs
-          setFormData(prev => ({
-            ...prev,
-            ufSinistro: formData._originalUfSinistro,
-            uf: formData._originalUf
-          }));
-        });
-      }
-    }
-  }, [ufOptions, formData._originalUfSinistro, formData._originalUf, formData._originalCidadeSinistro, formData._originalCidade, dadosOriginaisCarregados, loadCidadesSinistro, loadCidadesLocalizacao]);
 
   const posicoes = useMemo(() => [
     'DOCTOS RECEBIDO',
@@ -216,83 +179,104 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     return value;
   };
 
-  // PADRÃO SIMPLIFICADO: A guarda mestra no OptimizedSelect cuida da condição de corrida
+  // ESTRATÉGIA FINAL: HIDRATAÇÃO GRANULAR E ESTADO INICIAL SEGURO
+
+  // 1. EFEITO DE INICIALIZAÇÃO SEGURA
   useEffect(() => {
     if (open && registroData) {
-      const initializeForm = async () => {
-        setLoading(true);
-        try {
-          // Carrega tudo em paralelo
-          await Promise.all([
-            loadUfs(),
-            loadColaboradores(),
-            loadCidadesSinistro(registroData.uf_sinistro),
-            loadCidadesLocalizacao(registroData.uf)
-          ]);
+      // Dispara o carregamento das opções primárias
+      loadUfs();
+      loadColaboradores();
 
-          // Popula o formulário de uma vez
-          setFormData({
-            protocolo: String(registroData.id || ''),
-            entrada: String(registroData.data_entrada || ''),
-            marca: String(registroData.marca || ''),
-            veiculo: String(registroData.veiculo || ''),
-            placa: String(registroData.placa || ''),
-            chassi: String(registroData.chassi || ''),
-            anoVeiculo: String(registroData.ano_veiculo || ''),
-            anoModelo: String(registroData.ano_modelo || ''),
-            seguradora: String(registroData.seguradora || ''),
-            codSinistro: String(registroData.cod_sinistro || ''),
-            numeroBO: String(registroData.numero_bo || ''),
-            colaborador: registroData.colaborador?.nome || registroData.colaborador?.NOME || '',
-            posicao: String(registroData.posicao || ''),
-            numeroProcesso: String(registroData.numero_processo || ''),
-            tipo: String(registroData.tipo || ''),
-            situacao: String(registroData.situacao || ''),
-            // Novos campos
-            cor: String(registroData.cor || ''),
-            renavam: String(registroData.renavam || ''),
-            numeroMotor: String(registroData.numero_motor || ''),
-            // Campos condicionais para tipo Judicial
-            comarca: String(registroData.comarca || ''),
-            numeroProcessoJudicial: String(registroData.numero_processo_judicial || ''),
-            notaFiscal: String(registroData.nota_fiscal || ''),
-            numeroVara: String(registroData.numero_vara || ''),
-            dataPagamento: String(registroData.data_pagamento || ''),
-            honorario: String(registroData.honorario || ''),
-            nomeBanco: String(registroData.nome_banco || ''),
-            observacoes: String(registroData.observacoes || ''),
-            // Campos de UF e cidade
-            ufSinistro: String(registroData.uf_sinistro || ''),
-            cidadeSinistro: String(registroData.cidade_sinistro || ''),
-            uf: String(registroData.uf || ''),
-            cidade: String(registroData.cidade || ''),
-            // Campos originais para referência
-            _originalUfSinistro: String(registroData.uf_sinistro || ''),
-            _originalCidadeSinistro: String(registroData.cidade_sinistro || ''),
-            _originalUf: String(registroData.uf || ''),
-            _originalCidade: String(registroData.cidade || '')
-          });
+      // Popula o formData APENAS com campos que não são selects assíncronos
+      setFormData({
+        protocolo: String(registroData.id || ''),
+        entrada: registroData.data_entrada || '',
+        marca: String(registroData.marca || ''), // Select estático, seguro para definir
+        veiculo: String(registroData.veiculo || ''),
+        placa: String(registroData.placa || ''),
+        chassi: String(registroData.chassi || ''),
+        anoVeiculo: String(registroData.ano_veiculo || ''),
+        anoModelo: String(registroData.ano_modelo || ''),
+        seguradora: String(registroData.seguradora || ''),
+        codSinistro: String(registroData.cod_sinistro || ''),
+        numeroBO: String(registroData.numero_bo || ''),
+        posicao: String(registroData.posicao || ''), // Select estático, seguro
+        numeroProcesso: String(registroData.numero_processo || ''),
+        tipo: String(registroData.tipo || ''), // Select estático, seguro
+        situacao: String(registroData.situacao || ''),
+        // Novos campos
+        cor: String(registroData.cor || ''),
+        renavam: String(registroData.renavam || ''),
+        numeroMotor: String(registroData.numero_motor || ''),
+        // Campos condicionais para tipo Judicial
+        comarca: String(registroData.comarca || ''),
+        numeroProcessoJudicial: String(registroData.numero_processo_judicial || ''),
+        notaFiscal: String(registroData.nota_fiscal || ''),
+        numeroVara: String(registroData.numero_vara || ''),
+        dataPagamento: String(registroData.data_pagamento || ''),
+        honorario: String(registroData.honorario || ''),
+        nomeBanco: String(registroData.nome_banco || ''),
+        observacoes: String(registroData.observacoes || ''),
 
-          // Carregar observações existentes
-          if (registroData.observacoes_posts && Array.isArray(registroData.observacoes_posts)) {
-            setObservacoes(registroData.observacoes_posts);
-          } else {
-            setObservacoes([]);
-          }
+        // IMPORTANTE: Deixe os campos de selects assíncronos VAZIOS
+        colaborador: '',
+        ufSinistro: '',
+        cidadeSinistro: '',
+        uf: '',
+        cidade: ''
+      });
 
-          setDadosOriginaisCarregados(true);
-
-        } catch (err) {
-          setError('Falha ao inicializar o formulário.');
-          console.error("Initialization Error:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      initializeForm();
+      // Carregar observações existentes
+      if (registroData.observacoes_posts && Array.isArray(registroData.observacoes_posts)) {
+        setObservacoes(registroData.observacoes_posts);
+      } else {
+        setObservacoes([]);
+      }
     }
-  }, [open, registroData, loadUfs, loadColaboradores, loadCidadesSinistro, loadCidadesLocalizacao]);
+  }, [open, registroData, loadUfs, loadColaboradores]);
+
+  // 2. EFEITOS DE HIDRATAÇÃO GRANULAR
+
+  // Hidrata 'colaborador'
+  useEffect(() => {
+    if (registroData?.colaborador && colaboradorOptions.length > 0) {
+      const nomeColaborador = registroData.colaborador.nome || registroData.colaborador.NOME;
+      if (nomeColaborador) {
+        setFormData(prev => ({ ...prev, colaborador: nomeColaborador }));
+      }
+    }
+  }, [registroData, colaboradorOptions]);
+
+  // Hidrata 'ufSinistro' e dispara carregamento de cidades
+  useEffect(() => {
+    if (registroData?.uf_sinistro && ufOptions.length > 0) {
+      setFormData(prev => ({ ...prev, ufSinistro: registroData.uf_sinistro }));
+      loadCidadesSinistro(registroData.uf_sinistro);
+    }
+  }, [registroData, ufOptions, loadCidadesSinistro]);
+
+  // Hidrata 'cidadeSinistro'
+  useEffect(() => {
+    if (registroData?.cidade_sinistro && cidadeSinistroOptions.length > 0) {
+      setFormData(prev => ({ ...prev, cidadeSinistro: registroData.cidade_sinistro }));
+    }
+  }, [registroData, cidadeSinistroOptions]);
+
+  // Hidrata 'uf' (localização) e dispara carregamento de cidades
+  useEffect(() => {
+    if (registroData?.uf && ufOptions.length > 0) {
+      setFormData(prev => ({ ...prev, uf: registroData.uf }));
+      loadCidadesLocalizacao(registroData.uf);
+    }
+  }, [registroData, ufOptions, loadCidadesLocalizacao]);
+
+  // Hidrata 'cidade' (localização)
+  useEffect(() => {
+    if (registroData?.cidade && cidadeLocalizacaoOptions.length > 0) {
+      setFormData(prev => ({ ...prev, cidade: registroData.cidade }));
+    }
+  }, [registroData, cidadeLocalizacaoOptions]);
 
 
   const handleInputChange = useCallback((field) => (eventOrValue) => {
@@ -388,7 +372,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
   const handleSave = useCallback(async () => {
     try {
-      setLoading(true);
       setError('');
       setSuccess('');
       
@@ -470,7 +453,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       console.error('Erro ao atualizar registro:', err);
       setError(err.message || 'Erro ao atualizar registro');
     } finally {
-      setLoading(false);
+      // Salvamento concluído
     }
   }, [formData, onSave, colaboradorOptions, registroData, observacoes]);
 
@@ -523,7 +506,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     setNovaObservacao('');
     // Limpar cache dos dropdowns
     clearCache();
-    setDadosOriginaisCarregados(false); // Resetar flag de carregamento
     // Limpar estados de validação de placa
     setPlacaSnackbar({
       open: false,
@@ -766,7 +748,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
           <Grid item xs={12} sm={6} md={3}>
             <OptimizedSelect
-                label="UF do Sinistro"
+              key={`uf-sinistro-${ufOptions.length}`}
+              label="UF do Sinistro"
               value={formData.ufSinistro || ""}
               onChange={handleUfSinistroChange}
               options={ufOptions || []}
@@ -774,19 +757,20 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               loadingMessage="Carregando UFs..."
               emptyMessage="Nenhuma UF disponível"
               searchable={ufOptions.length > 10}
-              disabled={!!formData._originalUfSinistro && !dadosOriginaisCarregados}
+              disabled={false}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <OptimizedSelect
-                label="Cidade do Sinistro"
+              key={`cidade-sinistro-${cidadeSinistroOptions.length}`}
+              label="Cidade do Sinistro"
               value={formData.cidadeSinistro || ""}
-                onChange={handleInputChange('cidadeSinistro')}
+              onChange={handleInputChange('cidadeSinistro')}
               options={cidadeSinistroOptions || []}
               loading={loadingCidadesSinistro}
-              disabled={!formData.ufSinistro || (!!formData._originalCidadeSinistro && !dadosOriginaisCarregados)}
+              disabled={!formData.ufSinistro}
               loadingMessage="Carregando cidades..."
               emptyMessage={!formData.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               searchable={cidadeSinistroOptions.length > 10}
@@ -813,9 +797,10 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
           <Grid item xs={12} sm={6} md={3}>
             <OptimizedSelect
-                label="Colaborador"
+              key={`colaborador-${colaboradorOptions.length}`}
+              label="Colaborador"
               value={formData.colaborador || ""}
-                onChange={handleInputChange('colaborador')}
+              onChange={handleInputChange('colaborador')}
               options={colaboradorOptions || []}
               loading={loadingColaboradores}
               loadingMessage="Carregando colaboradores..."
@@ -837,7 +822,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
           <Grid item xs={12} sm={6} md={3}>
             <OptimizedSelect
-                label="UF (Localização)"
+              key={`uf-localizacao-${ufOptions.length}`}
+              label="UF (Localização)"
               value={formData.uf || ""}
               onChange={handleUfLocalizacaoChange}
               options={ufOptions || []}
@@ -845,19 +831,20 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               loadingMessage="Carregando UFs..."
               emptyMessage="Nenhuma UF disponível"
               searchable={ufOptions.length > 10}
-              disabled={!!formData._originalUf && !dadosOriginaisCarregados}
+              disabled={false}
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <OptimizedSelect
+              key={`cidade-localizacao-${cidadeLocalizacaoOptions.length}`}
               label="Cidade (Localização)"
               value={formData.cidade || ""}
               onChange={handleInputChange('cidade')}
               options={cidadeLocalizacaoOptions || []}
               loading={loadingCidadesLocalizacao}
-              disabled={!formData.uf || (!!formData._originalCidade && !dadosOriginaisCarregados)}
+              disabled={!formData.uf}
               loadingMessage="Carregando cidades..."
               emptyMessage={!formData.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               searchable={cidadeLocalizacaoOptions.length > 10}
@@ -1191,7 +1178,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             onClick={handleOpenDeleteDialog} 
             size="small"
             color="error"
-            disabled={loading || deleting}
+            disabled={deleting}
             title="Excluir registro"
             sx={{ 
               p: { xs: 0.5, sm: 1 },
@@ -1244,13 +1231,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Alert>
         )}
 
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <CircularProgress />
-          </Box>
-        ) : (
-          renderFormContent()
-        )}
+        {renderFormContent()}
       </DialogContent>
 
       <DialogActions sx={{ 
@@ -1268,7 +1249,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           onClick={handleOpenPdfModal}
           variant="outlined"
           startIcon={<AttachFileIcon />}
-          disabled={loading}
+          disabled={false}
           sx={{ 
             mr: { xs: 0, sm: 'auto' },
             mb: { xs: 1, sm: 0 },
@@ -1289,7 +1270,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           <Button
             onClick={handleClose}
             variant="outlined"
-            disabled={loading}
+            disabled={false}
             sx={{
               fontSize: { xs: '0.8rem', sm: '0.875rem' },
               py: { xs: 1, sm: 1.5 }
@@ -1301,14 +1282,14 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           <Button
             onClick={handleSave}
             variant="contained"
-            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
-            disabled={loading}
+            startIcon={<SaveIcon />}
+            disabled={false}
             sx={{
               fontSize: { xs: '0.8rem', sm: '0.875rem' },
               py: { xs: 1, sm: 1.5 }
             }}
           >
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
+            Salvar Alterações
           </Button>
         </Box>
       </DialogActions>
