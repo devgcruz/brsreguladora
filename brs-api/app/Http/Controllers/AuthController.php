@@ -24,7 +24,7 @@ class AuthController extends Controller
 
         $usuario = Usuario::where('Usuario', $credentials['usuario'])->first();
         
-        \Log::info('👤 Usuário encontrado:', $usuario ? ['id' => $usuario->id, 'nome' => $usuario->nome] : 'Não encontrado');
+        \Log::info('👤 Usuário e/ou senha não encontrado', ['status' => 'Não encontrado']);
 
         if (!$usuario || !Hash::check($credentials['senha'], $usuario->Senha)) {
 
