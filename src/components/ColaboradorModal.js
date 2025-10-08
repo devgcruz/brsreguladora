@@ -11,7 +11,8 @@ import {
   CircularProgress,
   FormControl,
   InputLabel,
-  FormHelperText
+  FormHelperText,
+  Typography
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -291,23 +292,24 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             helperText={errors.celular?.message || validationErrors.celular?.[0]}
           />
 
-          <FormControl fullWidth margin="normal" error={!!errors.cnh_foto || !!validationErrors.cnh_foto}>
-            <InputLabel htmlFor="cnh_foto">Foto da CNH (Opcional)</InputLabel>
+          <Box sx={{ mt: 2, mb: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Foto da CNH (Opcional)
+            </Typography>
             <TextField
               id="cnh_foto"
               type="file"
               accept="image/jpeg,image/png"
               onChange={handleFileChange}
               disabled={loading}
+              fullWidth
+              error={!!errors.cnh_foto || !!validationErrors.cnh_foto}
+              helperText={errors.cnh_foto?.message || validationErrors.cnh_foto?.[0] || 'Formatos aceitos: JPEG, PNG. Tamanho máximo: 2MB'}
               inputProps={{
                 'aria-label': 'Foto da CNH'
               }}
-              sx={{ mt: 1 }}
             />
-            <FormHelperText>
-              {errors.cnh_foto?.message || validationErrors.cnh_foto?.[0] || 'Formatos aceitos: JPEG, PNG. Tamanho máximo: 2MB'}
-            </FormHelperText>
-          </FormControl>
+          </Box>
         </Box>
       </DialogContent>
 
