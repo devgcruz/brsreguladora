@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\EntradaController;
 use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\JudicialController;
@@ -59,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Prestadores
     Route::apiResource('prestadores', PrestadorController::class);
     Route::get('/prestadores/statistics', [PrestadorController::class, 'statistics']);
+
+    // Colaboradores
+    Route::apiResource('colaboradores', ColaboradorController::class);
 
     // UFs e Cidades removidos - agora usando dados fixos (JSON) e cache local
 

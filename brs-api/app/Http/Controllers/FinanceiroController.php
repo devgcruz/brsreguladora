@@ -13,9 +13,6 @@ use Illuminate\Http\JsonResponse;
 class FinanceiroController extends Controller
 {
 
-    {
-    }
-
     /**
      * Listar dados financeiros
      */
@@ -42,9 +39,6 @@ class FinanceiroController extends Controller
 
         $financeiros = $query->orderBy('created_at', 'desc')->paginate(15);
 
-            'filtros' => $request->all()
-        ], $request->user());
-
         return response()->json([
             'success' => true,
             'data' => FinanceiroResource::collection($financeiros),
@@ -64,9 +58,6 @@ class FinanceiroController extends Controller
     {
         $financeiro->load('entrada');
 
-            'financeiro_id' => $financeiro->Id_Financeiro
-        ], request()->user());
-
         return response()->json([
             'success' => true,
             'data' => new FinanceiroResource($financeiro)
@@ -81,10 +72,6 @@ class FinanceiroController extends Controller
         $data = $request->validated();
         
         $financeiro = Financeiro::create($data);
-
-            'financeiro_id' => $financeiro->Id_Financeiro,
-            'entrada_id' => $financeiro->ID_ENTRADA
-        ], $request->user());
 
         return response()->json([
             'success' => true,
@@ -103,11 +90,6 @@ class FinanceiroController extends Controller
         $dadosAnteriores = $financeiro->toArray();
         $financeiro->update($data);
 
-            'financeiro_id' => $financeiro->Id_Financeiro,
-            'dados_anteriores' => $dadosAnteriores,
-            'dados_novos' => $financeiro->toArray()
-        ], $request->user());
-
         return response()->json([
             'success' => true,
             'message' => 'Dados financeiros atualizados com sucesso',
@@ -124,10 +106,6 @@ class FinanceiroController extends Controller
         $entradaId = $financeiro->ID_ENTRADA;
 
         $financeiro->delete();
-
-            'financeiro_id' => $financeiroId,
-            'entrada_id' => $entradaId
-        ], request()->user());
 
         return response()->json([
             'success' => true,

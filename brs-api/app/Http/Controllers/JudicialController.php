@@ -13,9 +13,6 @@ use Illuminate\Http\JsonResponse;
 class JudicialController extends Controller
 {
 
-    {
-    }
-
     /**
      * Listar processos judiciais
      */
@@ -46,9 +43,6 @@ class JudicialController extends Controller
 
         $judiciais = $query->orderBy('created_at', 'desc')->paginate(15);
 
-            'filtros' => $request->all()
-        ], $request->user());
-
         return response()->json([
             'success' => true,
             'data' => JudicialResource::collection($judiciais),
@@ -68,9 +62,6 @@ class JudicialController extends Controller
     {
         $judicial->load(['entrada', 'diligencias']);
 
-            'judicial_id' => $judicial->Id_Judicial
-        ], request()->user());
-
         return response()->json([
             'success' => true,
             'data' => new JudicialResource($judicial)
@@ -85,11 +76,6 @@ class JudicialController extends Controller
         $data = $request->validated();
         
         $judicial = Judicial::create($data);
-
-            'judicial_id' => $judicial->Id_Judicial,
-            'entrada_id' => $judicial->ID_ENTRADA,
-            'numero_processo' => $judicial->NUM_PROCESSO
-        ], $request->user());
 
         return response()->json([
             'success' => true,
@@ -108,11 +94,6 @@ class JudicialController extends Controller
         $dadosAnteriores = $judicial->toArray();
         $judicial->update($data);
 
-            'judicial_id' => $judicial->Id_Judicial,
-            'dados_anteriores' => $dadosAnteriores,
-            'dados_novos' => $judicial->toArray()
-        ], $request->user());
-
         return response()->json([
             'success' => true,
             'message' => 'Processo judicial atualizado com sucesso',
@@ -130,11 +111,6 @@ class JudicialController extends Controller
         $numeroProcesso = $judicial->NUM_PROCESSO;
 
         $judicial->delete();
-
-            'judicial_id' => $judicialId,
-            'entrada_id' => $entradaId,
-            'numero_processo' => $numeroProcesso
-        ], request()->user());
 
         return response()->json([
             'success' => true,

@@ -19,6 +19,7 @@ import {
   Business as PrestadoresIcon,
   Assessment as RelatoriosIcon,
   People as UsuariosIcon,
+  PersonAdd as ColaboradorIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import useAuthStore from '../store/authStore';
@@ -67,6 +68,12 @@ const menuItems = [
     icon: <UsuariosIcon />,
     path: '/dashboard/usuarios',
     permission: 'usuarios'
+  },
+  {
+    text: 'Gerenciar Colaboradores',
+    icon: <ColaboradorIcon />,
+    path: '/colaboradores',
+    permission: 'colaboradores'
   },
 ];
 

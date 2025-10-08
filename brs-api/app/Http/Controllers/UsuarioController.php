@@ -91,11 +91,6 @@ class UsuarioController extends Controller
         $dadosAnteriores = $usuario->toArray();
         $usuario->update($data);
 
-            'usuario_id' => $usuario->id,
-            'dados_anteriores' => $dadosAnteriores,
-            'dados_novos' => $usuario->toArray()
-        ], $request->user());
-
         return response()->json([
             'success' => true,
             'message' => 'Usuário atualizado com sucesso',
@@ -114,11 +109,6 @@ class UsuarioController extends Controller
 
         $usuario->delete();
 
-            'usuario_id' => $usuarioId,
-            'usuario_nome' => $usuarioNome,
-            'usuario_login' => $usuarioLogin
-        ], request()->user());
-
         return response()->json([
             'success' => true,
             'message' => 'Usuário excluído com sucesso'
@@ -135,10 +125,6 @@ class UsuarioController extends Controller
         
         $usuario->update(['status' => $novoStatus]);
 
-            'usuario_id' => $usuario->id,
-            'status_anterior' => $statusAnterior,
-            'novo_status' => $novoStatus
-        ], request()->user());
 
         return response()->json([
             'success' => true,
@@ -165,9 +151,6 @@ class UsuarioController extends Controller
         }
 
         $usuario->update(['Senha' => Hash::make($request->nova_senha)]);
-
-            'usuario_id' => $usuario->id
-        ], request()->user());
 
         return response()->json([
             'success' => true,

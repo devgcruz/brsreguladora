@@ -15,6 +15,7 @@ import JudicialPage from './pages/JudicialPage';
 import PrestadoresPage from './pages/PrestadoresPage';
 import RelatoriosPage from './pages/RelatoriosPage';
 import UsuariosPage from './pages/UsuariosPage';
+import ColaboradoresPage from './pages/ColaboradoresPage';
 
 // Components
 import DashboardLayout from './components/DashboardLayout';
@@ -165,6 +166,13 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/colaboradores" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ColaboradoresPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
           
           {/* Rota padrão */}
           <Route path="/" element={<Navigate to="/login" replace />} />

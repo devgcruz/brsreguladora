@@ -7,29 +7,45 @@ const API_CONFIG = {
 };
 
 // Headers padrão para todas as requisições
-const getDefaultHeaders = () => {
+const getDefaultHeaders = (customHeaders = {}, isFormData = false) => {
   const token = localStorage.getItem('auth_token');
   
-  return {
-    'Content-Type': 'application/json',
+  const headers = {
     'Accept': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...customHeaders
   };
+  
+  // Só definir Content-Type se não for FormData
+  if (!isFormData && !customHeaders['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
 };
 
 // Função para fazer requisições com retry automático
 const makeRequest = async (url, options = {}) => {
   const fullUrl = url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
   
-  const defaultOptions = {
-    headers: getDefaultHeaders(),
-    timeout: API_CONFIG.TIMEOUT,
-  };
+  // Detectar se é FormData
+  const isFormData = options.body instanceof FormData;
+  
+  // Preparar headers considerando FormData
+  const customHeaders = options.headers || {};
+  const headers = getDefaultHeaders(customHeaders, isFormData);
+  
+  // Preparar body
+  let body = options.body;
+  if (body && !isFormData && typeof body === 'object') {
+    body = JSON.stringify(body);
+  }
 
   const requestOptions = {
-    ...defaultOptions,
-    ...options,
-    headers: { ...defaultOptions.headers, ...options.headers }
+    method: options.method || 'GET',
+    headers,
+    body,
+    timeout: API_CONFIG.TIMEOUT,
   };
 
   let lastError;
@@ -54,6 +70,16 @@ const makeRequest = async (url, options = {}) => {
           window.location.href = '/login';
           throw new Error('Sessão expirada');
         }
+        
+        // Tratar erros de validação (422) de forma especial
+        if (response.status === 422) {
+          const errorData = await response.json();
+          const validationError = new Error('Validation Error');
+          validationError.status = 422;
+          validationError.errors = errorData.errors || errorData.message;
+          throw validationError;
+        }
+        
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
 

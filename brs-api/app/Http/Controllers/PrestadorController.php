@@ -12,9 +12,6 @@ use Illuminate\Http\Request;
 class PrestadorController extends Controller
 {
 
-    {
-    }
-
     /**
      * Listar todos os prestadores
      */
@@ -73,13 +70,6 @@ class PrestadorController extends Controller
 
             $prestador = Prestador::create($data);
 
-                'CREATE',
-                'PRESTADOR',
-                'Prestador criado',
-                ['prestador_id' => $prestador->ID_PRESTADOR, 'nome' => $prestador->NOME],
-                $request->user()
-            );
-
             return response()->json([
                 'success' => true,
                 'message' => 'Prestador criado com sucesso',
@@ -130,13 +120,6 @@ class PrestadorController extends Controller
 
             $prestador->update($data);
 
-                'UPDATE',
-                'PRESTADOR',
-                'Prestador atualizado',
-                ['prestador_id' => $prestador->ID_PRESTADOR, 'nome' => $prestador->NOME],
-                $request->user()
-            );
-
             return response()->json([
                 'success' => true,
                 'message' => 'Prestador atualizado com sucesso',
@@ -160,13 +143,6 @@ class PrestadorController extends Controller
             $prestadorNome = $prestador->NOME;
             
             $prestador->delete();
-
-                'DELETE',
-                'PRESTADOR',
-                'Prestador deletado',
-                ['prestador_id' => $prestadorId, 'nome' => $prestadorNome],
-                request()->user()
-            );
 
             return response()->json([
                 'success' => true,
