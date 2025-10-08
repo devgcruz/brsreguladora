@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Drawer,
@@ -9,7 +9,8 @@ import {
   ListItemText,
   Typography,
   Box,
-  Divider
+  Divider,
+  Collapse
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -20,13 +21,20 @@ import {
   Assessment as RelatoriosIcon,
   People as UsuariosIcon,
   PersonAdd as ColaboradorIcon,
-  Logout as LogoutIcon
+  Work as WorkIcon,
+  DirectionsCar as CarIcon,
+  Security as SecurityIcon,
+  Logout as LogoutIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import useAuthStore from '../store/authStore';
 
 const drawerWidth = 240;
 
-const menuItems = [
+// Itens principais do menu
+const mainMenuItems = [
   {
     text: 'Dashboard',
     icon: <DashboardIcon />,
@@ -68,19 +76,42 @@ const menuItems = [
     icon: <UsuariosIcon />,
     path: '/dashboard/usuarios',
     permission: 'usuarios'
-  },
+  }
+];
+
+// Sub-itens da seção "Gerenciar"
+const gerenciarSubItems = [
   {
-    text: 'Gerenciar Colaboradores',
+    text: 'Colaboradores',
     icon: <ColaboradorIcon />,
     path: '/colaboradores',
     permission: 'colaboradores'
   },
+  {
+    text: 'Posições',
+    icon: <WorkIcon />,
+    path: '/posicoes',
+    permission: 'posicoes'
+  },
+  {
+    text: 'Marcas',
+    icon: <CarIcon />,
+    path: '/marcas',
+    permission: 'marcas'
+  },
+  {
+    text: 'Seguradoras',
+    icon: <SecurityIcon />,
+    path: '/seguradoras',
+    permission: 'seguradoras'
+  }
 ];
 
 const Sidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const [gerenciarExpanded, setGerenciarExpanded] = useState(false);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -93,6 +124,26 @@ const Sidebar = ({ open, onClose }) => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleGerenciarToggle = () => {
+    setGerenciarExpanded(!gerenciarExpanded);
+  };
+
+  const hasPermission = (permission) => {
+    if (!user) return false;
+    
+    // Se for administrador, dar acesso total
+    if (user.nivel >= 3) {
+      return true;
+    }
+    
+    // Verificar permissões específicas
+    return user.permissoes && user.permissoes.includes(permission);
+  };
+
+  const isGerenciarPath = (path) => {
+    return gerenciarSubItems.some(item => item.path === path);
   };
 
   return (
@@ -143,7 +194,8 @@ const Sidebar = ({ open, onClose }) => {
       <Divider />
       
       <List>
-        {menuItems.map((item) => (
+        {/* Itens principais do menu */}
+        {mainMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}
@@ -172,6 +224,52 @@ const Sidebar = ({ open, onClose }) => {
             </ListItemButton>
           </ListItem>
         ))}
+
+        {/* Seção Gerenciar */}
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleGerenciarToggle}>
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Gerenciar" />
+            {gerenciarExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </ListItemButton>
+        </ListItem>
+        
+        <Collapse in={gerenciarExpanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {gerenciarSubItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  selected={location.pathname === item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  sx={{
+                    pl: 4, // Indentação para sub-itens
+                    '&.Mui-selected': {
+                      backgroundColor: 'transparent',
+                      color: 'black',
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
       </List>
       
       <Divider />

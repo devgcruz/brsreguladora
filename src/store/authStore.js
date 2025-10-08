@@ -133,9 +133,16 @@ const useAuthStore = create((set, get) => ({
       
       if (response.success) {
         console.log('✅ AuthStore: Login bem-sucedido, atualizando estado...');
+        const userData = response.data.user;
+        const token = response.data.token;
+        
+        // Salvar no localStorage
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(userData));
+        
         set({
-          user: response.data.user,
-          token: response.data.token,
+          user: userData,
+          token: token,
           isAuthenticated: true,
           loading: false,
           error: null
@@ -159,6 +166,44 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Registro
+  register: async (userData) => {
+    console.log('🚀 AuthStore: Iniciando registro...');
+    set({ loading: true, error: null });
+    try {
+      const response = await authService.register(userData);
+      
+      if (response.success) {
+        console.log('✅ AuthStore: Registro bem-sucedido');
+        set({
+          loading: false,
+          error: null
+        });
+        return { success: true, message: response.message };
+      } else {
+        console.log('❌ AuthStore: Registro falhou:', response.message);
+        set({
+          loading: false,
+          error: response.message || 'Erro ao fazer registro'
+        });
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      console.error('💥 AuthStore: Erro no registro:', error);
+      set({
+        loading: false,
+        error: error.message || 'Erro ao fazer registro'
+      });
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Atualizar dados do usuário
+  updateUser: (userData) => {
+    set({ user: userData });
+    localStorage.setItem('user_data', JSON.stringify(userData));
+  },
+
   // Logout
   logout: async () => {
     try {
@@ -166,6 +211,10 @@ const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {
+      // Limpar localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      
       set({
         user: null,
         token: null,

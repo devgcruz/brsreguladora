@@ -198,10 +198,17 @@ const ColaboradoresPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
+    <Container maxWidth="lg" sx={{ mt: 2, mb: 2, px: { xs: 1, sm: 2 } }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' },
+          mb: 3,
+          gap: 2
+        }}>
+          <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
             <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
             Gerenciar Colaboradores
           </Typography>
@@ -209,7 +216,10 @@ const ColaboradoresPage = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleNewColaborador}
-            sx={{ minWidth: 160 }}
+            sx={{ 
+              minWidth: { xs: '100%', sm: 160 },
+              alignSelf: { xs: 'stretch', sm: 'auto' }
+            }}
           >
             Novo Colaborador
           </Button>
@@ -263,35 +273,98 @@ const ColaboradoresPage = () => {
             )}
           </Box>
         ) : (
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nome</TableCell>
-                  <TableCell>CPF</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Celular</TableCell>
-                  <TableCell align="center">Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {colaboradores.map((colaborador) => (
-                  <TableRow key={colaborador.id}>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+          <>
+            {/* Desktop Table */}
+            <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell>CPF</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Celular</TableCell>
+                    <TableCell align="center">Ações</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {colaboradores.map((colaborador) => (
+                    <TableRow key={colaborador.id}>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                          {colaborador.nome}
+                        </Box>
+                      </TableCell>
+                      <TableCell>{colaborador.cpf}</TableCell>
+                      <TableCell>{colaborador.email}</TableCell>
+                      <TableCell>{colaborador.celular}</TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="info"
+                          onClick={() => handleViewCnh(colaborador)}
+                          title="Visualizar CNH"
+                          disabled={!colaborador.cnh_path}
+                        >
+                          {colaborador.cnh_path ? <VisibilityIcon /> : <ImageIcon />}
+                        </IconButton>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEditColaborador(colaborador)}
+                          title="Editar"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteColaborador(colaborador)}
+                          title="Excluir"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Mobile Cards */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              {colaboradores.map((colaborador) => (
+                <Card key={colaborador.id} sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="h6" component="div">
                         {colaborador.nome}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{colaborador.cpf}</TableCell>
-                    <TableCell>{colaborador.email}</TableCell>
-                    <TableCell>{colaborador.celular}</TableCell>
-                    <TableCell align="center">
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        CPF: {colaborador.cpf}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Email: {colaborador.email}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Celular: {colaborador.celular}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                       <IconButton
                         color="info"
                         onClick={() => handleViewCnh(colaborador)}
                         title="Visualizar CNH"
                         disabled={!colaborador.cnh_path}
+                        size="small"
                       >
                         {colaborador.cnh_path ? <VisibilityIcon /> : <ImageIcon />}
                       </IconButton>
@@ -299,6 +372,7 @@ const ColaboradoresPage = () => {
                         color="primary"
                         onClick={() => handleEditColaborador(colaborador)}
                         title="Editar"
+                        size="small"
                       >
                         <EditIcon />
                       </IconButton>
@@ -306,28 +380,42 @@ const ColaboradoresPage = () => {
                         color="error"
                         onClick={() => handleDeleteColaborador(colaborador)}
                         title="Excluir"
+                        size="small"
                       >
                         <DeleteIcon />
                       </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </>
         )}
 
         {/* Controles de paginação */}
         {colaboradores.length > 0 && (
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ 
+            mt: 3, 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            flexWrap: 'wrap', 
+            gap: 2 
+          }}>
             {/* Informações de paginação */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'stretch', sm: 'center' }, 
+              gap: 2 
+            }}>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                 Mostrando {paginationInfo.from || 0} a {paginationInfo.to || 0} de {totalItems} colaboradores
               </Typography>
               
               {/* Seletor de itens por página */}
-              <FormControl size="small" sx={{ minWidth: 120 }}>
+              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
                 <InputLabel>Por página</InputLabel>
                 <Select
                   value={perPage}
@@ -343,15 +431,20 @@ const ColaboradoresPage = () => {
             </Box>
 
             {/* Componente de paginação */}
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              showFirstButton
-              showLastButton
-              disabled={loading}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+                disabled={loading}
+                size="small"
+                siblingCount={1}
+                boundaryCount={1}
+              />
+            </Box>
           </Box>
         )}
       </Paper>
@@ -360,6 +453,9 @@ const ColaboradoresPage = () => {
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, colaborador: null })}
+        disableEnforceFocus
+        disableAutoFocus
+        disableRestoreFocus
       >
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
@@ -384,6 +480,17 @@ const ColaboradoresPage = () => {
         onClose={() => setCnhModal({ open: false, colaborador: null, imageUrl: null })}
         maxWidth="md"
         fullWidth
+        disableEnforceFocus
+        disableAutoFocus
+        disableRestoreFocus
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '100%',
+            maxWidth: { xs: '95vw', sm: '800px' },
+            maxHeight: { xs: '95vh', sm: '80vh' },
+            margin: { xs: '8px', sm: '32px' }
+          }
+        }}
       >
         <DialogTitle>
           CNH - {cnhModal.colaborador?.nome}

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\EntradaController;
 use App\Http\Controllers\FinanceiroController;
@@ -8,6 +10,9 @@ use App\Http\Controllers\JudicialController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PrestadorController;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\PosicaoController;
+use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\SeguradoraController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 
 // Rotas públicas (sem autenticação)
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [RegisterController::class, 'register']);
 
 // Rota de visualização de PDF (sem autenticação - usa token na query)
 Route::get('/pdfs/{id}/view', [PdfController::class, 'view']);
@@ -31,10 +37,15 @@ Route::get('/pdfs/{id}/view', [PdfController::class, 'view']);
 // Rotas protegidas (requerem autenticação)
 Route::middleware('auth:sanctum')->group(function () {
     
-    // Autenticação
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/check-permission/{permission}', [AuthController::class, 'checkPermission']);
+        // Autenticação
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/check-permission/{permission}', [AuthController::class, 'checkPermission']);
+
+        // Perfil do usuário
+        Route::get('/profile', [ProfileController::class, 'show']);
+        Route::post('/profile', [ProfileController::class, 'update']);
+        Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
 
     // Entradas (Registros)
     Route::get('/entradas/check-placa', [EntradaController::class, 'checkPlaca']);
@@ -64,10 +75,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Colaboradores
     Route::apiResource('colaboradores', ColaboradorController::class);
 
+    // Posições
+    Route::apiResource('posicoes', PosicaoController::class);
+
+    // Marcas
+    Route::apiResource('marcas', MarcaController::class);
+
+    // Seguradoras
+    Route::apiResource('seguradoras', SeguradoraController::class);
+
     // UFs e Cidades removidos - agora usando dados fixos (JSON) e cache local
 
     // Usuários (apenas administradores)
-    Route::middleware('can:manage-users')->group(function () {
+    Route::middleware('permission:usuarios')->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::patch('/usuarios/{usuario}/toggle-status', [UsuarioController::class, 'toggleStatus']);
         Route::post('/usuarios/{usuario}/change-password', [UsuarioController::class, 'changePassword']);

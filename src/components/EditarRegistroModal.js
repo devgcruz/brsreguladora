@@ -27,6 +27,7 @@ import PdfModal from './PdfModal';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
+import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 
 // Estado inicial vazio para o formulário (apenas campos de texto)
 const initialState = {
@@ -58,6 +59,17 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     colaboradorOptions
   } = useOptimizedDropdowns();
 
+  // Hook para dados dinâmicos dos selects
+  const {
+    posicoes,
+    marcas,
+    seguradoras,
+    colaboradores: colaboradoresDinamicos,
+    loading: loadingDropdowns,
+    error: errorDropdowns,
+    reloadData: reloadDropdowns
+  } = useRegistroEntradaDropdowns();
+
   // Estado para observações em formato de posts
   const [observacoes, setObservacoes] = useState([]);
   const [novaObservacao, setNovaObservacao] = useState('');
@@ -74,22 +86,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   // useEffect antigo removido - agora gerenciado pela nova arquitetura centralizada
 
 
-  const posicoes = useMemo(() => [
-    'DOCTOS RECEBIDO',
-    'AGUARDA DOCUMENTOS',
-    'DOCTOS ENVIADO REP',
-    'VEÍCULO LIBERADO',
-    'VEÍCULO REMOVIDO',
-    'DOCTOS RECEBIDO REP',
-    'FINALIZADO',
-    'CANCELADO',
-    'Pátio A', // Adicionar posição que está no banco
-    'Pátio B'
-  ].map(p => ({ value: p, label: p })), []);
-
-  // Opções estáticas memoizadas
-  const marcas = useMemo(() => ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Volkswagen', 'Fiat', 'Hyundai', 'Nissan', 'BMW', 'Mercedes-Benz'].map(m => ({ value: m, label: m })), []);
-  const seguradoras = useMemo(() => ['Porto Seguro', 'SulAmérica', 'Bradesco Seguros', 'Itaú Seguros', 'Allianz', 'Zurich', 'HDI Seguros', 'Liberty Seguros', 'Azul Seguros'].map(s => ({ value: s, label: s })), []);
+  // Opções estáticas memoizadas (mantendo apenas as que não foram migradas)
   const tipos = useMemo(() => ['JUDICIAL', 'ADM', 'Danos a Terceiros'].map(t => ({ value: t, label: t })), []);
 
 
@@ -409,7 +406,10 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               label="Marca"
               value={textFieldsData.marca || ""}
               onChange={handleTextFieldChange('marca')}
-              options={marcas}
+              options={marcas.map(marca => ({ value: marca.nome, label: marca.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando marcas..."
+              emptyMessage="Nenhuma marca encontrada"
               sx={fieldSx}
             />
           </Grid>
@@ -544,7 +544,10 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               label="Seguradora"
               value={textFieldsData.seguradora || ""}
               onChange={handleTextFieldChange('seguradora')}
-              options={seguradoras}
+              options={seguradoras.map(seguradora => ({ value: seguradora.nome, label: seguradora.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando seguradoras..."
+              emptyMessage="Nenhuma seguradora encontrada"
               sx={fieldSx}
             />
           </Grid>
@@ -622,8 +625,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               label="Colaborador"
               value={dropdownValues.colaborador || ""}
               onChange={handleSelectChange('colaborador')}
-              options={colaboradorOptions || []}
-              loading={dropdownsLoading}
+              options={colaboradoresDinamicos.map(colaborador => ({ value: colaborador.nome, label: colaborador.nome }))}
+              loading={loadingDropdowns}
               loadingMessage="Carregando colaboradores..."
               emptyMessage="Nenhum colaborador encontrado"
               sx={fieldSx}
@@ -635,7 +638,10 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               label="Posição"
               value={textFieldsData.posicao || ""}
               onChange={handleTextFieldChange('posicao')}
-              options={posicoes}
+              options={posicoes.map(posicao => ({ value: posicao.nome, label: posicao.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando posições..."
+              emptyMessage="Nenhuma posição encontrada"
               sx={fieldSx}
             />
           </Grid>

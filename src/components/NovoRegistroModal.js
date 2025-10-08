@@ -25,6 +25,7 @@ import PdfModal from './PdfModal';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
+import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 
 
 const NovoRegistroModal = ({ open, onClose, onSave }) => {
@@ -59,6 +60,17 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     initializeDropdownValues,
     clearCache
   } = useOptimizedDropdowns();
+
+  // Hook para dados dinâmicos dos selects
+  const {
+    posicoes,
+    marcas,
+    seguradoras,
+    colaboradores: colaboradoresDinamicos,
+    loading: loadingDropdowns,
+    error: errorDropdowns,
+    reloadData: reloadDropdowns
+  } = useRegistroEntradaDropdowns();
   
   // Carregar dados dos dropdowns quando o modal for aberto
   useEffect(() => {
@@ -116,19 +128,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
   const [observacoes, setObservacoes] = useState([]);
   const [novaObservacao, setNovaObservacao] = useState('');
 
-  // Opções para campos de seleção - memoizadas para performance
-  const marcas = useMemo(() => ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Volkswagen', 'Fiat', 'Hyundai', 'Nissan', 'BMW', 'Mercedes-Benz'], []);
-  const seguradoras = useMemo(() => ['Porto Seguro', 'SulAmérica', 'Bradesco Seguros', 'Itaú Seguros', 'Allianz', 'Zurich', 'HDI Seguros', 'Liberty Seguros'], []);
-  const posicoes = useMemo(() => [
-    'DOCTOS RECEBIDO',
-    'AGUARDA DOCUMENTOS',
-    'DOCTOS ENVIADO REP',
-    'VEÍCULO LIBERADO',
-    'VEÍCULO REMOVIDO',
-    'DOCTOS RECEBIDO REP',
-    'FINALIZADO',
-    'CANCELADO'
-  ], []);
+  // Opções estáticas (mantendo apenas as que não foram migradas para dados dinâmicos)
 
   // Handlers otimizados para mudança de UF
   const handleUfSinistroChange = useCallback((value) => {
@@ -517,7 +517,10 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
               label="Marca"
               value={formData.marca || ""}
               onChange={handleInputChange('marca')}
-              options={marcas.map(marca => ({ value: marca, label: marca })).filter(opt => opt.value && opt.label)}
+              options={marcas.map(marca => ({ value: marca.nome, label: marca.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando marcas..."
+              emptyMessage="Nenhuma marca encontrada"
               sx={fieldSx}
             />
           </Grid>
@@ -659,7 +662,10 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
               label="Seguradora"
               value={formData.seguradora || ""}
               onChange={handleInputChange('seguradora')}
-              options={seguradoras.map(seguradora => ({ value: seguradora, label: seguradora })).filter(opt => opt.value && opt.label)}
+              options={seguradoras.map(seguradora => ({ value: seguradora.nome, label: seguradora.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando seguradoras..."
+              emptyMessage="Nenhuma seguradora encontrada"
               sx={fieldSx}
             />
           </Grid>
@@ -739,11 +745,11 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
               label="Colaborador"
               value={formData.colaborador || ""}
               onChange={handleInputChange('colaborador')}
-              options={colaboradorOptions || []}
-              loading={loadingColaboradores}
+              options={colaboradoresDinamicos.map(colaborador => ({ value: colaborador.nome, label: colaborador.nome }))}
+              loading={loadingDropdowns}
               loadingMessage="Carregando colaboradores..."
               emptyMessage="Nenhum colaborador encontrado"
-              searchable={colaboradorOptions.length > 10}
+              searchable={colaboradoresDinamicos.length > 10}
               sx={fieldSx}
             />
           </Grid>
@@ -753,7 +759,10 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
               label="Posição"
               value={formData.posicao || ""}
               onChange={handleInputChange('posicao')}
-              options={posicoes.map(posicao => ({ value: posicao, label: posicao })).filter(opt => opt.value && opt.label)}
+              options={posicoes.map(posicao => ({ value: posicao.nome, label: posicao.nome }))}
+              loading={loadingDropdowns}
+              loadingMessage="Carregando posições..."
+              emptyMessage="Nenhuma posição encontrada"
               sx={fieldSx}
             />
           </Grid>

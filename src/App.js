@@ -7,6 +7,8 @@ import useAuthStore from './store/authStore';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import RegistrosPage from './pages/RegistrosPage';
 import EditorPage from './pages/EditorPage';
@@ -16,6 +18,9 @@ import PrestadoresPage from './pages/PrestadoresPage';
 import RelatoriosPage from './pages/RelatoriosPage';
 import UsuariosPage from './pages/UsuariosPage';
 import ColaboradoresPage from './pages/ColaboradoresPage';
+import PosicoesPage from './pages/PosicoesPage';
+import MarcasPage from './pages/MarcasPage';
+import SeguradorasPage from './pages/SeguradorasPage';
 
 // Components
 import DashboardLayout from './components/DashboardLayout';
@@ -88,8 +93,9 @@ function App() {
         }}
       >
         <Routes>
-          {/* Rota de Login */}
+          {/* Rotas Públicas */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           
           {/* Rotas Protegidas */}
           <Route path="/dashboard" element={
@@ -170,6 +176,38 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <ColaboradoresPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/posicoes" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <PosicoesPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/marcas" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <MarcasPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/seguradoras" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <SeguradorasPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ProfilePage />
               </DashboardLayout>
             </ProtectedRoute>
           } />

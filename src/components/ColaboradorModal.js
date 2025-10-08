@@ -211,7 +211,23 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      disableEnforceFocus
+      disableAutoFocus
+      disableRestoreFocus
+      sx={{
+        '& .MuiDialog-paper': {
+          width: '100%',
+          maxWidth: { xs: '95vw', sm: '600px' },
+          maxHeight: { xs: '95vh', sm: '80vh' },
+          margin: { xs: '8px', sm: '32px' }
+        }
+      }}
+    >
       <DialogTitle>
         {isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}
       </DialogTitle>

@@ -57,10 +57,12 @@ class AuthController extends Controller
                     'id' => $usuario->id,
                     'nome' => $usuario->nome,
                     'usuario' => $usuario->Usuario,
+                    'email' => $usuario->email,
                     'nivel' => $usuario->nivel,
                     'permissoes' => $usuario->permissoes,
                     'status' => $usuario->status,
-                    'ultimo_acesso' => $usuario->ultimo_acesso
+                    'ultimo_acesso' => $usuario->ultimo_acesso,
+                    'profile_photo_path' => $usuario->profile_photo_path
                 ],
                 'token' => $token
             ]
@@ -96,10 +98,12 @@ class AuthController extends Controller
                 'id' => $usuario->id,
                 'nome' => $usuario->nome,
                 'usuario' => $usuario->Usuario,
+                'email' => $usuario->email,
                 'nivel' => $usuario->nivel,
                 'permissoes' => $usuario->permissoes,
                 'status' => $usuario->status,
-                'ultimo_acesso' => $usuario->ultimo_acesso
+                'ultimo_acesso' => $usuario->ultimo_acesso,
+                'profile_photo_path' => $usuario->profile_photo_path
             ]
         ]);
     }

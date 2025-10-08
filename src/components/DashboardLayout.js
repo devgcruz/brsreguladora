@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import Sidebar from './Sidebar';
+import ProfileDropdown from './ProfileDropdown';
 import useAuthStore from '../store/authStore';
 
 const DashboardLayout = ({ children }) => {
@@ -74,9 +75,10 @@ const DashboardLayout = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Sistema BRS - Dashboard
           </Typography>
+          <ProfileDropdown />
         </Toolbar>
       </AppBar>
 

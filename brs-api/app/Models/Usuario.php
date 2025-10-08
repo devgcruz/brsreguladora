@@ -8,10 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Traits\HasRoles;
 
 class Usuario extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $table = 'usuarios';
 
@@ -24,7 +25,8 @@ class Usuario extends Authenticatable
         'cargo',
         'permissoes',
         'status',
-        'ultimo_acesso'
+        'ultimo_acesso',
+        'profile_photo_path'
     ];
 
     protected $hidden = [
@@ -58,6 +60,12 @@ class Usuario extends Authenticatable
      */
     public function hasPermission($permission)
     {
+        // Se for administrador, dar acesso total
+        if ($this->isAdmin()) {
+            return true;
+        }
+        
+        // Verificar permissões específicas
         $permissoes = $this->permissoes ?? [];
         return in_array($permission, $permissoes);
     }

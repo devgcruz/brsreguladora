@@ -1,0 +1,476 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Alert,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Fab,
+  InputAdornment,
+  Card,
+  CardContent,
+  Grid,
+  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import GenericCrudModal from './GenericCrudModal';
+
+const GenericCrudPage = ({ 
+  title, 
+  apiService, 
+  itemName = 'item',
+  itemNamePlural = 'itens',
+  icon: ItemIcon = null
+}) => {
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
+  
+  // Estados de paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [paginationInfo, setPaginationInfo] = useState({});
+
+  // Estados dos modais
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
+
+  // Carregar itens
+  const loadItems = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getAll(currentPage, perPage, searchTerm);
+      
+      if (response.success) {
+        setItems(response.data);
+        setTotalPages(response.meta.last_page);
+        setTotalItems(response.meta.total);
+        setPaginationInfo(response.meta);
+      } else {
+        setAlert({
+          show: true,
+          message: 'Erro ao carregar dados',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar itens:', error);
+      setAlert({
+        show: true,
+        message: 'Erro ao carregar dados',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carregar itens quando a página ou perPage mudar
+  useEffect(() => {
+    loadItems();
+  }, [currentPage, perPage]);
+
+  // Buscar com debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (currentPage === 1) {
+        loadItems();
+      } else {
+        setCurrentPage(1);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // Handlers
+  const handleNewItem = () => {
+    setEditingItem(null);
+    setModalOpen(true);
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setModalOpen(true);
+  };
+
+  const handleDeleteItem = (item) => {
+    setDeleteDialog({ open: true, item });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.delete(deleteDialog.item.id);
+      
+      if (response.success) {
+        setAlert({
+          show: true,
+          message: `${itemName} excluído com sucesso!`,
+          type: 'success'
+        });
+        loadItems();
+      } else {
+        setAlert({
+          show: true,
+          message: response.message || 'Erro ao excluir',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      setAlert({
+        show: true,
+        message: 'Erro ao excluir',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+      setDeleteDialog({ open: false, item: null });
+    }
+  };
+
+  const handleModalSave = async (itemData) => {
+    try {
+      setLoading(true);
+      let response;
+      
+      if (editingItem) {
+        response = await apiService.update(editingItem.id, itemData);
+      } else {
+        response = await apiService.create(itemData);
+      }
+      
+      if (response.success) {
+        setAlert({
+          show: true,
+          message: editingItem ? 
+            `${itemName} atualizado com sucesso!` : 
+            `${itemName} criado com sucesso!`,
+          type: 'success'
+        });
+        setModalOpen(false);
+        setEditingItem(null);
+        loadItems();
+      } else {
+        setAlert({
+          show: true,
+          message: response.message || 'Erro ao salvar',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      setAlert({
+        show: true,
+        message: 'Erro ao salvar',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (event, page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePerPageChange = (event) => {
+    setPerPage(event.target.value);
+    setCurrentPage(1);
+  };
+
+  return (
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {ItemIcon && <ItemIcon />}
+            {title}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleNewItem}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
+            Novo {itemName}
+          </Button>
+        </Box>
+
+        {/* Barra de busca */}
+        <TextField
+          fullWidth
+          placeholder={`Buscar ${itemNamePlural}...`}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 2 }}
+        />
+      </Paper>
+
+      {/* Alert */}
+      {alert.show && (
+        <Alert 
+          severity={alert.type} 
+          onClose={() => setAlert({ show: false, message: '', type: 'success' })}
+          sx={{ mb: 2 }}
+        >
+          {alert.message}
+        </Alert>
+      )}
+
+      {/* Conteúdo */}
+      <Paper sx={{ p: 2 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : items.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" color="text.secondary">
+              {searchTerm ? `Nenhum ${itemName} encontrado` : `Nenhum ${itemName} cadastrado`}
+            </Typography>
+            {!searchTerm && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleNewItem}
+                sx={{ mt: 2 }}
+              >
+                Cadastrar Primeiro {itemName}
+              </Button>
+            )}
+          </Box>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell align="center">Ações</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {items.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {ItemIcon && <ItemIcon sx={{ mr: 1, color: 'text.secondary' }} />}
+                          {item.nome}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEditItem(item)}
+                          title="Editar"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteItem(item)}
+                          title="Excluir"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Mobile Cards */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+              {items.map((item) => (
+                <Card key={item.id} sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      {ItemIcon && <ItemIcon sx={{ mr: 1, color: 'text.secondary' }} />}
+                      <Typography variant="h6" component="div">
+                        {item.nome}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleEditItem(item)}
+                        title="Editar"
+                        size="small"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteItem(item)}
+                        title="Excluir"
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </>
+        )}
+
+        {/* Paginação */}
+        {items.length > 0 && (
+          <Box sx={{ 
+            mt: 3, 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            flexWrap: 'wrap', 
+            gap: 2 
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'stretch', sm: 'center' }, 
+              gap: 2 
+            }}>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+                Mostrando {paginationInfo.from || 0} a {paginationInfo.to || 0} de {totalItems} {itemNamePlural}
+              </Typography>
+              
+              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+                <InputLabel>Por página</InputLabel>
+                <Select
+                  value={perPage}
+                  label="Por página"
+                  onChange={handlePerPageChange}
+                >
+                  <MenuItem value={5}>5</MenuItem>
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                showFirstButton
+                showLastButton
+                disabled={loading}
+                size="small"
+                siblingCount={1}
+                boundaryCount={1}
+              />
+            </Box>
+          </Box>
+        )}
+      </Paper>
+
+      {/* FAB para mobile */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleNewItem}
+        sx={{ 
+          position: 'fixed', 
+          bottom: 16, 
+          right: 16,
+          display: { xs: 'flex', sm: 'none' }
+        }}
+      >
+        <AddIcon />
+      </Fab>
+
+      {/* Modal de edição/criação */}
+      <GenericCrudModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingItem(null);
+        }}
+        onSave={handleModalSave}
+        item={editingItem}
+        itemName={itemName}
+      />
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, item: null })}
+        disableEnforceFocus
+        disableAutoFocus
+        disableRestoreFocus
+      >
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja excluir o {itemName} "{deleteDialog.item?.nome}"?
+            Esta ação não pode ser desfeita.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, item: null })}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+          >
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default GenericCrudPage;
+
