@@ -474,3 +474,4 @@ const GenericCrudPage = ({
 
 export default GenericCrudPage;
 
+

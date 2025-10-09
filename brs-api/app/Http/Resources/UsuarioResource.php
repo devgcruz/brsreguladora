@@ -17,8 +17,10 @@ class UsuarioResource extends JsonResource
         return [
             'id' => $this->id,
             'nome' => $this->nome,
-            'usuario' => $this->Usuario,
+            'Usuario' => $this->Usuario,
+            'email' => $this->email,
             'nivel' => $this->nivel,
+            'cargo' => $this->cargo,
             'permissoes' => $this->permissoes,
             'status' => $this->status,
             'ultimo_acesso' => $this->ultimo_acesso?->format('Y-m-d H:i:s'),

@@ -12,7 +12,6 @@ import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import RegistrosPage from './pages/RegistrosPage';
 import EditorPage from './pages/EditorPage';
-import FinanceiroPage from './pages/FinanceiroPage';
 import JudicialPage from './pages/JudicialPage';
 import PrestadoresPage from './pages/PrestadoresPage';
 import RelatoriosPage from './pages/RelatoriosPage';
@@ -130,13 +129,6 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/dashboard/financeiro" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <FinanceiroPage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
           
           <Route path="/dashboard/judicial" element={
             <ProtectedRoute>

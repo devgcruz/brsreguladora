@@ -86,3 +86,4 @@ const seguradoraService = {
 
 export default seguradoraService;
 
+

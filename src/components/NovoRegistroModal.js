@@ -13,6 +13,8 @@ import {
   CircularProgress,
   Snackbar,
   Skeleton,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
 import OptimizedSelect from './OptimizedSelect';
@@ -22,6 +24,7 @@ import {
   AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import PdfModal from './PdfModal';
+import FinanceiroTab from './financeiro/FinanceiroTab';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
@@ -41,6 +44,11 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     severity: 'error'
   });
   const [isReady, setIsReady] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
   
   // Hook otimizado para dropdowns
   const {
@@ -1172,7 +1180,44 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
         )}
 
         {isReady ? (
-          renderFormContent()
+          <Box>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs value={activeTab} onChange={handleTabChange} aria-label="abas do registro">
+                <Tab label="Dados do Registro" />
+                <Tab label="Financeiro" />
+                <Tab label="Judicial" />
+                <Tab label="Documentos" />
+              </Tabs>
+            </Box>
+            
+            <Box sx={{ mt: 2 }}>
+              {activeTab === 0 && renderFormContent()}
+              {activeTab === 1 && savedEntradaId && (
+                <FinanceiroTab entradaId={savedEntradaId} />
+              )}
+              {activeTab === 1 && !savedEntradaId && (
+                <Box textAlign="center" p={3}>
+                  <Typography variant="body2" color="text.secondary">
+                    Salve o registro primeiro para gerenciar os lançamentos financeiros.
+                  </Typography>
+                </Box>
+              )}
+              {activeTab === 2 && (
+                <Box textAlign="center" p={3}>
+                  <Typography variant="body2" color="text.secondary">
+                    Funcionalidade Judicial em desenvolvimento.
+                  </Typography>
+                </Box>
+              )}
+              {activeTab === 3 && (
+                <Box textAlign="center" p={3}>
+                  <Typography variant="body2" color="text.secondary">
+                    Funcionalidade de Documentos em desenvolvimento.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
         ) : (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%" minHeight="400px">
             <Box textAlign="center">

@@ -15,29 +15,23 @@ class Financeiro extends Model
 
     protected $fillable = [
         'ID_ENTRADA',
-        'DATA_NF',
-        'NUM_NF',
-        'Honorarios',
-        'Data_Pagto_Honor',
-        'Vlr_Despesas',
-        'Data_pagto_Desp',
-        'Baixa_NF',
-        'Valor',
-        'Data_Pagamento',
-        'Banco',
-        'OBSERVACOES',
-        'INFO_ADICIONAIS',
+        'NUMERO_RECIBO',
+        'VALOR_TOTAL_RECIBO',
+        'DATA_PAGAMENTO_RECIBO',
+        'DATA_NOTA_FISCAL',
+        'NUMERO_NOTA_FISCAL',
+        'VALOR_NOTA_FISCAL',
+        'DATA_PAGAMENTO_NOTA_FISCAL',
+        'OBSERVACAO',
         'StatusPG'
     ];
 
     protected $casts = [
-        'DATA_NF' => 'date',
-        'Data_Pagto_Honor' => 'date',
-        'Data_pagto_Desp' => 'date',
-        'Data_Pagamento' => 'date',
-        'Honorarios' => 'decimal:2',
-        'Vlr_Despesas' => 'decimal:2',
-        'Valor' => 'decimal:2'
+        'DATA_PAGAMENTO_RECIBO' => 'date',
+        'DATA_NOTA_FISCAL' => 'date',
+        'DATA_PAGAMENTO_NOTA_FISCAL' => 'date',
+        'VALOR_TOTAL_RECIBO' => 'decimal:2',
+        'VALOR_NOTA_FISCAL' => 'decimal:2'
     ];
 
     /**

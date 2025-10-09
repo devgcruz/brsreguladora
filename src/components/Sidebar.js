@@ -15,7 +15,6 @@ import {
 import {
   Dashboard as DashboardIcon,
   Assignment as AssignmentIcon,
-  AttachMoney as FinanceiroIcon,
   Gavel as JudicialIcon,
   Business as PrestadoresIcon,
   Assessment as RelatoriosIcon,
@@ -46,12 +45,6 @@ const mainMenuItems = [
     icon: <AssignmentIcon />,
     path: '/dashboard/registrodeentrada',
     permission: 'registros'
-  },
-  {
-    text: 'Financeiro',
-    icon: <FinanceiroIcon />,
-    path: '/dashboard/financeiro',
-    permission: 'financeiro'
   },
   {
     text: 'Judicial',

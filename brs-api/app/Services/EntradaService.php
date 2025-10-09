@@ -40,15 +40,10 @@ class EntradaService
                 'observacoes_posts_tipo' => gettype($entrada->OBSERVACOES_POSTS)
             ]);
 
-            // Criar registro financeiro vazio se não existir
-            if (!isset($data['financeiro'])) {
-                Financeiro::create([
-                    'ID_ENTRADA' => $entrada->Id_Entrada,
-                    'StatusPG' => 'Pendente'
-                ]);
-            }
+            // Não criar mais registro financeiro automaticamente
+            // Os lançamentos financeiros serão criados através da aba específica
 
-            return $entrada->load(['colaborador', 'financeiro', 'judicial', 'pdfs']);
+            return $entrada->load(['colaborador', 'financeiros', 'judicial', 'pdfs']);
         });
     }
 
@@ -62,7 +57,7 @@ class EntradaService
             \Log::info('Dados recebidos para atualização de entrada:', $data);
             
             $entrada->update($data);
-            return $entrada->load(['colaborador', 'financeiro', 'judicial', 'pdfs']);
+            return $entrada->load(['colaborador', 'financeiros', 'judicial', 'pdfs']);
         });
     }
 
@@ -135,7 +130,7 @@ class EntradaService
      */
     public function searchEntradas(array $filtros): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $query = Entrada::with(['colaborador', 'financeiro', 'judicial', 'pdfs']);
+        $query = Entrada::with(['colaborador', 'financeiros', 'judicial', 'pdfs']);
 
         if (!empty($filtros['search'])) {
             $search = $filtros['search'];
@@ -184,7 +179,7 @@ class EntradaService
      */
     public function generateReport(array $filtros): array
     {
-        $query = Entrada::with(['colaborador', 'financeiro', 'judicial']);
+        $query = Entrada::with(['colaborador', 'financeiros', 'judicial']);
 
         // Aplicar filtros
         if (!empty($filtros['data_inicio'])) {

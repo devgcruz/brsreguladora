@@ -30,8 +30,15 @@ class UpdateUsuarioRequest extends FormRequest
                 'max:100',
                 Rule::unique('usuarios', 'Usuario')->ignore($this->route('usuario'), 'id')
             ],
+            'email' => [
+                'sometimes',
+                'email',
+                'max:255',
+                Rule::unique('usuarios', 'email')->ignore($this->route('usuario'), 'id')
+            ],
             'Senha' => 'sometimes|string|min:6',
             'nivel' => 'sometimes|integer|min:1|max:5',
+            'cargo' => 'sometimes|string|max:100',
             'permissoes' => 'nullable|array',
             'permissoes.*' => 'string|in:dashboard,registros,financeiro,judicial,prestadores,relatorios,usuarios,auditoria',
             'status' => 'nullable|string|in:ativo,inativo'
@@ -51,11 +58,16 @@ class UpdateUsuarioRequest extends FormRequest
             'Usuario.string' => 'O campo usuário deve ser uma string.',
             'Usuario.max' => 'O campo usuário não pode ter mais de 100 caracteres.',
             'Usuario.unique' => 'Este usuário já está cadastrado no sistema.',
+            'email.email' => 'O campo email deve ter um formato válido.',
+            'email.max' => 'O campo email não pode ter mais de 255 caracteres.',
+            'email.unique' => 'Este email já está cadastrado no sistema.',
             'Senha.string' => 'O campo senha deve ser uma string.',
             'Senha.min' => 'O campo senha deve ter pelo menos 6 caracteres.',
             'nivel.integer' => 'O campo nível deve ser um número inteiro.',
             'nivel.min' => 'O campo nível deve ser pelo menos 1.',
             'nivel.max' => 'O campo nível não pode ser maior que 5.',
+            'cargo.string' => 'O campo cargo deve ser uma string.',
+            'cargo.max' => 'O campo cargo não pode ter mais de 100 caracteres.',
             'permissoes.array' => 'O campo permissões deve ser um array.',
             'permissoes.*.string' => 'Cada permissão deve ser uma string.',
             'permissoes.*.in' => 'Permissão inválida.',

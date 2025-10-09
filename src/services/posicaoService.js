@@ -86,3 +86,4 @@ const posicaoService = {
 
 export default posicaoService;
 
+

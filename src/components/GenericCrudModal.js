@@ -178,3 +178,4 @@ const GenericCrudModal = ({
 
 export default GenericCrudModal;
 
+

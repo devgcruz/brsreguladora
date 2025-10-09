@@ -70,11 +70,11 @@ class Entrada extends Model
     }
 
     /**
-     * Relacionamento com financeiro
+     * Relacionamento com financeiros
      */
-    public function financeiro(): HasOne
+    public function financeiros(): HasMany
     {
-        return $this->hasOne(Financeiro::class, 'ID_ENTRADA', 'Id_Entrada');
+        return $this->hasMany(Financeiro::class, 'ID_ENTRADA', 'Id_Entrada');
     }
 
     /**

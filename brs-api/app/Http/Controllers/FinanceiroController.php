@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFinanceiroRequest;
+use App\Http\Requests\StoreFinanceiroForEntradaRequest;
 use App\Http\Requests\UpdateFinanceiroRequest;
 use App\Http\Resources\FinanceiroResource;
 use App\Models\Financeiro;
@@ -131,6 +132,38 @@ class FinanceiroController extends Controller
             'success' => true,
             'data' => new FinanceiroResource($financeiro)
         ]);
+    }
+
+    /**
+     * Listar lançamentos financeiros por entrada
+     */
+    public function indexByEntrada(Entrada $entrada): JsonResponse
+    {
+        $financeiros = Financeiro::where('ID_ENTRADA', $entrada->Id_Entrada)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => FinanceiroResource::collection($financeiros)
+        ]);
+    }
+
+    /**
+     * Criar lançamento financeiro para uma entrada específica
+     */
+    public function storeForEntrada(StoreFinanceiroForEntradaRequest $request, Entrada $entrada): JsonResponse
+    {
+        $data = $request->validated();
+        $data['ID_ENTRADA'] = $entrada->Id_Entrada;
+        
+        $financeiro = Financeiro::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lançamento financeiro criado com sucesso',
+            'data' => new FinanceiroResource($financeiro)
+        ], 201);
     }
 
     /**

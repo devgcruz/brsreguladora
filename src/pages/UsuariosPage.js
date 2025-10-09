@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../services/userService';
 import {
   Box,
@@ -16,17 +16,19 @@ import {
   Paper,
   Chip,
   IconButton,
+  Avatar,
+  Tooltip,
+  Alert,
+  Snackbar,
+  TextField,
+  InputAdornment,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   FormControlLabel,
-  Switch,
-  Avatar,
-  Tooltip,
-  Alert,
-  Snackbar
+  Switch
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -34,118 +36,113 @@ import {
   Delete as DeleteIcon,
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
-  Security as SecurityIcon,
   Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon
+  VisibilityOff as VisibilityOffIcon,
+  Search as SearchIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
-import OptimizedSelect from '../components/OptimizedSelect';
 
-// Dados mockados dos usuários
-const mockUsuarios = [
-  {
-    id: 1,
-    nome: 'João Silva',
-    email: 'joao.silva@brs.com',
-    cargo: 'Administrador',
-    status: 'ativo',
-    ultimoAcesso: '2024-01-15T10:30:00',
-    permissoes: {
-      dashboard: true,
-      registros: true,
-      financeiro: true,
-      judicial: true,
-      prestadores: true,
-      relatorios: true,
-      usuarios: true
-    }
-  },
-  {
-    id: 2,
-    nome: 'Maria Santos',
-    email: 'maria.santos@brs.com',
-    cargo: 'Analista',
-    status: 'ativo',
-    ultimoAcesso: '2024-01-15T09:15:00',
-    permissoes: {
-      dashboard: true,
-      registros: true,
-      financeiro: false,
-      judicial: true,
-      prestadores: false,
-      relatorios: true,
-      usuarios: false
-    }
-  },
-  {
-    id: 3,
-    nome: 'Pedro Costa',
-    email: 'pedro.costa@brs.com',
-    cargo: 'Operador',
-    status: 'inativo',
-    ultimoAcesso: '2024-01-10T14:20:00',
-    permissoes: {
-      dashboard: true,
-      registros: true,
-      financeiro: false,
-      judicial: false,
-      prestadores: false,
-      relatorios: false,
-      usuarios: false
-    }
-  }
-];
-
-// Opções de permissões
-const permissoesDisponiveis = [
-  { key: 'dashboard', label: 'Dashboard', description: 'Acesso ao painel principal' },
-  { key: 'registros', label: 'Registros', description: 'Gerenciar registros de entrada' },
-  { key: 'financeiro', label: 'Financeiro', description: 'Acesso a informações financeiras' },
-  { key: 'judicial', label: 'Judicial', description: 'Processos judiciais' },
-  { key: 'prestadores', label: 'Prestadores', description: 'Gerenciar prestadores de serviço' },
-  { key: 'relatorios', label: 'Relatórios', description: 'Gerar e visualizar relatórios' },
-  { key: 'usuarios', label: 'Usuários', description: 'Gerenciar usuários do sistema' }
-];
-
-const UsuariosPage = memo(() => {
-  const [usuarios, setUsuarios] = useState(mockUsuarios);
+const UsuariosPage = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [searchTerm, setSearchTerm] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
+    Usuario: '',
     email: '',
-    senha: '',
+    Senha: '',
+    nivel: 1,
     cargo: '',
-    status: 'ativo',
-    permissoes: {
-      dashboard: false,
-      registros: false,
-      financeiro: false,
-      judicial: false,
-      prestadores: false,
-      relatorios: false,
-      usuarios: false
-    }
+    permissoes: [],
+    status: 'ativo'
   });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [formLoading, setFormLoading] = useState(false);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    ativos: 0,
+    inativos: 0,
+    administradores: 0
+  });
+
+  // Opções de permissões disponíveis
+  const permissoesDisponiveis = [
+    { key: 'dashboard', label: 'Dashboard' },
+    { key: 'registros', label: 'Registros' },
+    { key: 'financeiro', label: 'Financeiro' },
+    { key: 'judicial', label: 'Judicial' },
+    { key: 'prestadores', label: 'Prestadores' },
+    { key: 'relatorios', label: 'Relatórios' },
+    { key: 'usuarios', label: 'Usuários' },
+    { key: 'auditoria', label: 'Auditoria' }
+  ];
+
+  // Carregar usuários da API
+  const carregarUsuarios = useCallback(async (filtros = {}) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await userService.getAllUsers({
+        ...filtros,
+        search: searchTerm || undefined
+      });
+      
+      if (response.success) {
+        setUsuarios(response.data || []);
+      } else {
+        setError(response.message || 'Erro ao carregar usuários');
+      }
+    } catch (err) {
+      setError('Erro inesperado ao carregar usuários');
+      console.error('Erro ao carregar usuários:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  // Carregar estatísticas
+  const carregarEstatisticas = useCallback(async () => {
+    try {
+      const response = await userService.getUserStats();
+      if (response.success) {
+        setStatistics(response.data);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar estatísticas:', err);
+    }
+  }, []);
+
+  // Efeito para carregar dados iniciais
+  useEffect(() => {
+    carregarUsuarios();
+    carregarEstatisticas();
+  }, [carregarUsuarios, carregarEstatisticas]);
+
+  // Efeito para filtrar usuários quando o termo de busca muda
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      carregarUsuarios();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, carregarUsuarios]);
 
   // Função para abrir modal de criação
   const handleNovoUsuario = () => {
     setUsuarioEditando(null);
     setFormData({
       nome: '',
+      Usuario: '',
       email: '',
-      senha: '',
+      Senha: '',
+      nivel: 1,
       cargo: '',
-      status: 'ativo',
-      permissoes: {
-        dashboard: false,
-        registros: false,
-        financeiro: false,
-        judicial: false,
-        prestadores: false,
-        relatorios: false,
-        usuarios: false
-      }
+      permissoes: [],
+      status: 'ativo'
     });
     setModalAberto(true);
   };
@@ -154,124 +151,171 @@ const UsuariosPage = memo(() => {
   const handleEditarUsuario = (usuario) => {
     setUsuarioEditando(usuario);
     setFormData({
-      nome: usuario.nome,
-      email: usuario.email,
-      senha: '', // Senha não é exibida por segurança
-      cargo: usuario.cargo,
-      status: usuario.status,
-      permissoes: { ...usuario.permissoes }
+      nome: usuario.nome || '',
+      Usuario: usuario.Usuario || '',
+      email: usuario.email || '',
+      Senha: '', // Sempre limpar senha na edição
+      nivel: usuario.nivel || 1,
+      cargo: usuario.cargo || '',
+      permissoes: usuario.permissoes || [],
+      status: usuario.status || 'ativo'
     });
     setModalAberto(true);
   };
 
   // Função para salvar usuário
-  const handleSalvar = () => {
-    if (!formData.nome || !formData.email || !formData.cargo) {
-      setSnackbar({
-        open: true,
-        message: 'Preencha todos os campos obrigatórios',
-        severity: 'error'
-      });
-      return;
-    }
-
-    // Para novos usuários, senha é obrigatória
-    if (!usuarioEditando && !formData.senha) {
-      setSnackbar({
-        open: true,
-        message: 'Senha é obrigatória para novos usuários',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (usuarioEditando) {
-      // Editar usuário existente
-      const dadosAtualizacao = { ...formData };
-      // Se não foi informada nova senha, manter a senha atual
-      if (!formData.senha) {
-        delete dadosAtualizacao.senha;
-      }
+  const handleSalvar = async () => {
+    try {
+      setFormLoading(true);
       
-      const usuarioAtualizado = userService.updateUser(usuarioEditando.id, dadosAtualizacao);
-      
-      if (usuarioAtualizado) {
-        setUsuarios(prev => prev.map(u => 
-          u.id === usuarioEditando.id ? usuarioAtualizado : u
-        ));
+      // Validações básicas
+      if (!formData.nome || !formData.Usuario || !formData.email) {
         setSnackbar({
           open: true,
-          message: 'Usuário atualizado com sucesso!',
-          severity: 'success'
+          message: 'Preencha todos os campos obrigatórios',
+          severity: 'error'
         });
+        return;
       }
-    } else {
-      // Criar novo usuário
-      const novoUsuario = userService.createUser(formData);
-      
-      if (novoUsuario) {
-        setUsuarios(prev => [...prev, novoUsuario]);
+
+      // Para novos usuários, senha é obrigatória
+      if (!usuarioEditando && !formData.Senha) {
         setSnackbar({
           open: true,
-          message: 'Usuário criado com sucesso!',
+          message: 'Senha é obrigatória para novos usuários',
+          severity: 'error'
+        });
+        return;
+      }
+
+      let response;
+      if (usuarioEditando) {
+        // Editar usuário existente
+        const dadosAtualizacao = { ...formData };
+        // Se não foi informada nova senha, remover do payload
+        if (!formData.Senha) {
+          delete dadosAtualizacao.Senha;
+        }
+        
+        response = await userService.updateUser(usuarioEditando.id, dadosAtualizacao);
+      } else {
+        // Criar novo usuário
+        response = await userService.createUser(formData);
+      }
+      
+      if (response.success) {
+        setSnackbar({
+          open: true,
+          message: response.message || `Usuário ${usuarioEditando ? 'atualizado' : 'criado'} com sucesso!`,
           severity: 'success'
         });
+        setModalAberto(false);
+        carregarUsuarios(); // Recarregar lista
+        carregarEstatisticas(); // Recarregar estatísticas
+      } else {
+        setSnackbar({
+          open: true,
+          message: response.message || 'Erro ao salvar usuário',
+          severity: 'error'
+        });
       }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Erro inesperado ao salvar usuário',
+        severity: 'error'
+      });
+      console.error('Erro ao salvar usuário:', err);
+    } finally {
+      setFormLoading(false);
     }
-
-    setModalAberto(false);
   };
 
   // Função para excluir usuário
-  const handleExcluir = (usuario) => {
+  const handleExcluir = async (usuario) => {
     if (window.confirm(`Tem certeza que deseja excluir o usuário ${usuario.nome}?`)) {
-      const sucesso = userService.deleteUser(usuario.id);
-      
-      if (sucesso) {
-        setUsuarios(prev => prev.filter(u => u.id !== usuario.id));
+      try {
+        const response = await userService.deleteUser(usuario.id);
+        
+        if (response.success) {
+          setSnackbar({
+            open: true,
+            message: response.message || 'Usuário excluído com sucesso!',
+            severity: 'success'
+          });
+          carregarUsuarios(); // Recarregar lista
+          carregarEstatisticas(); // Recarregar estatísticas
+        } else {
+          setSnackbar({
+            open: true,
+            message: response.message || 'Erro ao excluir usuário',
+            severity: 'error'
+          });
+        }
+      } catch (err) {
         setSnackbar({
           open: true,
-          message: 'Usuário excluído com sucesso!',
-          severity: 'success'
+          message: 'Erro inesperado ao excluir usuário',
+          severity: 'error'
         });
+        console.error('Erro ao excluir usuário:', err);
       }
     }
   };
 
   // Função para alternar status do usuário
-  const handleToggleStatus = (usuario) => {
-    setUsuarios(prev => prev.map(u => 
-      u.id === usuario.id 
-        ? { ...u, status: u.status === 'ativo' ? 'inativo' : 'ativo' }
-        : u
-    ));
-    setSnackbar({
-      open: true,
-      message: `Usuário ${usuario.status === 'ativo' ? 'desativado' : 'ativado'} com sucesso!`,
-      severity: 'success'
-    });
+  const handleToggleStatus = async (usuario) => {
+    try {
+      const response = await userService.toggleUserStatus(usuario.id);
+      
+      if (response.success) {
+        setSnackbar({
+          open: true,
+          message: response.message || `Usuário ${usuario.status === 'ativo' ? 'desativado' : 'ativado'} com sucesso!`,
+          severity: 'success'
+        });
+        carregarUsuarios(); // Recarregar lista
+        carregarEstatisticas(); // Recarregar estatísticas
+      } else {
+        setSnackbar({
+          open: true,
+          message: response.message || 'Erro ao alterar status do usuário',
+          severity: 'error'
+        });
+      }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Erro inesperado ao alterar status',
+        severity: 'error'
+      });
+      console.error('Erro ao alterar status:', err);
+    }
   };
 
   // Função para alterar permissão
   const handlePermissaoChange = (permissao) => {
     setFormData(prev => ({
       ...prev,
-      permissoes: {
-        ...prev.permissoes,
-        [permissao]: !prev.permissoes[permissao]
-      }
+      permissoes: prev.permissoes.includes(permissao)
+        ? prev.permissoes.filter(p => p !== permissao)
+        : [...prev.permissoes, permissao]
     }));
   };
 
-  // Estatísticas dos usuários
-  const estatisticas = useMemo(() => {
-    const total = usuarios.length;
-    const ativos = usuarios.filter(u => u.status === 'ativo').length;
-    const inativos = total - ativos;
-    const administradores = usuarios.filter(u => u.cargo === 'Administrador').length;
-    
-    return { total, ativos, inativos, administradores };
-  }, [usuarios]);
+  // Função para recarregar dados
+  const handleRefresh = () => {
+    carregarUsuarios();
+    carregarEstatisticas();
+  };
+
+  if (loading && usuarios.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 2 }}>
@@ -279,14 +323,41 @@ const UsuariosPage = memo(() => {
         <Typography variant="h4" gutterBottom>
           Gerenciamento de Usuários
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleNovoUsuario}
-          sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
-        >
-          Novo Usuário
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            Atualizar
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleNovoUsuario}
+            sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+          >
+            Novo Usuário
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Campo de busca */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Buscar usuários por nome ou login..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Box>
 
       {/* Cards de Estatísticas */}
@@ -300,7 +371,7 @@ const UsuariosPage = memo(() => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" component="div">
-                    {estatisticas.total}
+                    {statistics.total}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total de Usuários
@@ -320,7 +391,7 @@ const UsuariosPage = memo(() => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" component="div">
-                    {estatisticas.ativos}
+                    {statistics.ativos}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Usuários Ativos
@@ -340,7 +411,7 @@ const UsuariosPage = memo(() => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" component="div">
-                    {estatisticas.inativos}
+                    {statistics.inativos}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Usuários Inativos
@@ -360,7 +431,7 @@ const UsuariosPage = memo(() => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" component="div">
-                    {estatisticas.administradores}
+                    {statistics.administradores}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Administradores
@@ -372,107 +443,136 @@ const UsuariosPage = memo(() => {
         </Grid>
       </Grid>
 
+      {/* Mensagem de erro */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       {/* Tabela de Usuários */}
       <Card>
         <CardContent>
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Usuário</TableCell>
-                  <TableCell>Cargo</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Último Acesso</TableCell>
-                  <TableCell>Permissões</TableCell>
-                  <TableCell align="center">Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {usuarios.map((usuario) => (
-                  <TableRow key={usuario.id}>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                          {usuario.nome ? usuario.nome.charAt(0).toUpperCase() : '?'}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle2">
-                            {usuario.nome}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {usuario.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={usuario.cargo}
-                        color={usuario.cargo === 'Administrador' ? 'warning' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={usuario.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                        color={usuario.status === 'ativo' ? 'success' : 'error'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {new Date(usuario.ultimoAcesso).toLocaleDateString('pt-BR')}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Object.entries(usuario.permissoes)
-                          .filter(([_, temPermissao]) => temPermissao)
-                          .map(([permissao, _]) => (
-                            <Chip
-                              key={permissao}
-                              label={permissoesDisponiveis.find(p => p.key === permissao)?.label}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="Editar">
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleEditarUsuario(usuario)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={usuario.status === 'ativo' ? 'Desativar' : 'Ativar'}>
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleToggleStatus(usuario)}
-                          >
-                            {usuario.status === 'ativo' ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Excluir">
-                          <IconButton 
-                            size="small" 
-                            color="error"
-                            onClick={() => handleExcluir(usuario)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <TableContainer component={Paper} elevation={0}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Usuário</TableCell>
+                    <TableCell>Cargo</TableCell>
+                    <TableCell>Nível</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Último Acesso</TableCell>
+                    <TableCell>Permissões</TableCell>
+                    <TableCell align="center">Ações</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {usuarios.map((usuario) => (
+                    <TableRow key={usuario.id}>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                            {usuario.nome ? usuario.nome.charAt(0).toUpperCase() : '?'}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="subtitle2">
+                              {usuario.nome}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {usuario.Usuario}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {usuario.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {usuario.cargo || 'Não informado'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`Nível ${usuario.nivel}`}
+                          color={usuario.nivel >= 3 ? 'warning' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={usuario.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                          color={usuario.status === 'ativo' ? 'success' : 'error'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {usuario.ultimo_acesso 
+                            ? new Date(usuario.ultimo_acesso).toLocaleDateString('pt-BR')
+                            : 'Nunca'
+                          }
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {usuario.permissoes && usuario.permissoes.length > 0 ? (
+                            usuario.permissoes.map((permissao) => (
+                              <Chip
+                                key={permissao}
+                                label={permissoesDisponiveis.find(p => p.key === permissao)?.label || permissao}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Nenhuma
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Tooltip title="Editar">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleEditarUsuario(usuario)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={usuario.status === 'ativo' ? 'Desativar' : 'Ativar'}>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleToggleStatus(usuario)}
+                            >
+                              {usuario.status === 'ativo' ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Excluir">
+                            <IconButton 
+                              size="small" 
+                              color="error"
+                              onClick={() => handleExcluir(usuario)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </CardContent>
       </Card>
 
@@ -500,6 +600,15 @@ const UsuariosPage = memo(() => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                label="Login"
+                value={formData.Usuario}
+                onChange={(e) => setFormData(prev => ({ ...prev, Usuario: e.target.value }))}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 label="E-mail"
                 type="email"
                 value={formData.email}
@@ -512,41 +621,48 @@ const UsuariosPage = memo(() => {
                 fullWidth
                 label={usuarioEditando ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}
                 type="password"
-                value={formData.senha}
-                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
+                value={formData.Senha}
+                onChange={(e) => setFormData(prev => ({ ...prev, Senha: e.target.value }))}
                 required={!usuarioEditando}
                 helperText={usuarioEditando ? "Deixe em branco para manter a senha atual" : "Senha obrigatória para novos usuários"}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <OptimizedSelect
+              <TextField
+                fullWidth
                 label="Cargo"
                 value={formData.cargo}
-                onChange={(value) => setFormData(prev => ({ ...prev, cargo: value }))}
-                options={[
-                  { value: "Administrador", label: "Administrador" },
-                  { value: "Analista", label: "Analista" },
-                  { value: "Operador", label: "Operador" },
-                  { value: "Consultor", label: "Consultor" }
-                ]}
-                required
+                onChange={(e) => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <OptimizedSelect
-                label="Status"
-                value={formData.status}
-                onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-                options={[
-                  { value: "ativo", label: "Ativo" },
-                  { value: "inativo", label: "Inativo" }
-                ]}
+              <TextField
+                fullWidth
+                label="Nível"
+                type="number"
+                value={formData.nivel}
+                onChange={(e) => setFormData(prev => ({ ...prev, nivel: parseInt(e.target.value) || 1 }))}
+                inputProps={{ min: 1, max: 5 }}
+                helperText="1-Operador, 2-Analista, 3-Administrador"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.status === 'ativo'}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      status: e.target.checked ? 'ativo' : 'inativo' 
+                    }))}
+                  />
+                }
+                label="Usuário Ativo"
               />
             </Grid>
             
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                <SecurityIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                 Permissões de Acesso
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
@@ -554,32 +670,23 @@ const UsuariosPage = memo(() => {
               </Typography>
             </Grid>
 
-            {permissoesDisponiveis.map((permissao) => (
-              <Grid item xs={12} sm={6} md={4} key={permissao.key}>
-                <Card variant="outlined">
-                  <CardContent sx={{ p: 2 }}>
+            <Grid item xs={12}>
+              <Grid container spacing={2}>
+                {permissoesDisponiveis.map((permissao) => (
+                  <Grid item xs={12} sm={6} md={4} key={permissao.key}>
                     <FormControlLabel
                       control={
                         <Switch
-                          checked={formData.permissoes[permissao.key]}
+                          checked={formData.permissoes.includes(permissao.key)}
                           onChange={() => handlePermissaoChange(permissao.key)}
                         />
                       }
-                      label={
-                        <Box>
-                          <Typography variant="subtitle2">
-                            {permissao.label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {permissao.description}
-                          </Typography>
-                        </Box>
-                      }
+                      label={permissao.label}
                     />
-                  </CardContent>
-                </Card>
+                  </Grid>
+                ))}
               </Grid>
-            ))}
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -589,9 +696,9 @@ const UsuariosPage = memo(() => {
           <Button 
             onClick={handleSalvar} 
             variant="contained"
-            disabled={!formData.nome || !formData.email || !formData.cargo || (!usuarioEditando && !formData.senha)}
+            disabled={formLoading || !formData.nome || !formData.Usuario || !formData.email || (!usuarioEditando && !formData.Senha)}
           >
-            {usuarioEditando ? 'Atualizar' : 'Criar'} Usuário
+            {formLoading ? <CircularProgress size={20} /> : (usuarioEditando ? 'Atualizar' : 'Criar')} Usuário
           </Button>
         </DialogActions>
       </Dialog>
@@ -611,6 +718,6 @@ const UsuariosPage = memo(() => {
       </Snackbar>
     </Box>
   );
-});
+};
 
 export default UsuariosPage;

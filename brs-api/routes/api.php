@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/entradas/check-placa', [EntradaController::class, 'checkPlaca']);
     Route::get('/entradas/statistics', [EntradaController::class, 'statistics']);
     Route::apiResource('entradas', EntradaController::class);
+    
+    // Financeiros aninhados por entrada
+    Route::get('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'indexByEntrada']);
+    Route::post('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'storeForEntrada']);
 
     // PDFs
     Route::get('/pdfs', [PdfController::class, 'index']);
@@ -87,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // UFs e Cidades removidos - agora usando dados fixos (JSON) e cache local
 
     // Usuários (apenas administradores)
-    Route::middleware('permission:usuarios')->group(function () {
+    Route::middleware([\App\Http\Middleware\PermissionMiddleware::class . ':usuarios'])->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::patch('/usuarios/{usuario}/toggle-status', [UsuarioController::class, 'toggleStatus']);
         Route::post('/usuarios/{usuario}/change-password', [UsuarioController::class, 'changePassword']);

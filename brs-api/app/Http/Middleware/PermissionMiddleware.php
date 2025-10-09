@@ -24,6 +24,12 @@ class PermissionMiddleware
             ], 401);
         }
 
+        // Se for administrador, permitir acesso
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+
+        // Verificar permissão específica
         if (!$user->hasPermission($permission)) {
             return response()->json([
                 'success' => false,

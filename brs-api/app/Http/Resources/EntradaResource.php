@@ -67,8 +67,8 @@ class EntradaResource extends JsonResource
             'observacoes' => $this->OBSERVACOES,
             // Observações em formato de posts
             'observacoes_posts' => $this->OBSERVACOES_POSTS,
-            'financeiro' => $this->whenLoaded('financeiro', function () {
-                return new FinanceiroResource($this->financeiro);
+            'financeiros' => $this->whenLoaded('financeiros', function () {
+                return FinanceiroResource::collection($this->financeiros);
             }),
             'judicial' => $this->whenLoaded('judicial', function () {
                 return new JudicialResource($this->judicial);

@@ -71,8 +71,10 @@ class UsuarioController extends Controller
     {
         $data = $request->validated();
         
+        // Fazer hash da senha antes de criar o usuário
+        $data['Senha'] = Hash::make($data['Senha']);
+        
         $usuario = Usuario::create($data);
-
 
         return response()->json([
             'success' => true,
@@ -88,7 +90,14 @@ class UsuarioController extends Controller
     {
         $data = $request->validated();
         
-        $dadosAnteriores = $usuario->toArray();
+        // Se a senha foi fornecida, fazer hash dela
+        if (isset($data['Senha']) && !empty($data['Senha'])) {
+            $data['Senha'] = Hash::make($data['Senha']);
+        } else {
+            // Se a senha não foi fornecida ou está vazia, remover do array para manter a senha atual
+            unset($data['Senha']);
+        }
+        
         $usuario->update($data);
 
         return response()->json([

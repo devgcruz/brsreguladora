@@ -17,3 +17,4 @@ const SeguradorasPage = () => {
 
 export default SeguradorasPage;
 
+
