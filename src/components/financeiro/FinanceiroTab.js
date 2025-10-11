@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -24,7 +24,12 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
-  Chip
+  Chip,
+  Switch,
+  FormControlLabel,
+  Divider,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -34,6 +39,7 @@ import {
   Cancel as CancelIcon
 } from '@mui/icons-material';
 import financeiroService from '../../services/financeiroService';
+import FinanceiroObservacoesFeed from '../FinanceiroObservacoesFeed';
 
 const FinanceiroTab = ({ entradaId }) => {
   const [financeiros, setFinanceiros] = useState([]);
@@ -42,6 +48,14 @@ const FinanceiroTab = ({ entradaId }) => {
   const [success, setSuccess] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingFinanceiro, setEditingFinanceiro] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [financeiroToDelete, setFinanceiroToDelete] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const [formData, setFormData] = useState({
     NUMERO_RECIBO: '',
     VALOR_TOTAL_RECIBO: '',
@@ -50,7 +64,7 @@ const FinanceiroTab = ({ entradaId }) => {
     NUMERO_NOTA_FISCAL: '',
     VALOR_NOTA_FISCAL: '',
     DATA_PAGAMENTO_NOTA_FISCAL: '',
-    OBSERVACAO: '',
+    OBSERVACOES: '',
     StatusPG: 'Pendente'
   });
 
@@ -107,7 +121,7 @@ const FinanceiroTab = ({ entradaId }) => {
       NUMERO_NOTA_FISCAL: '',
       VALOR_NOTA_FISCAL: '',
       DATA_PAGAMENTO_NOTA_FISCAL: '',
-      OBSERVACAO: '',
+      OBSERVACOES: '',
       StatusPG: 'Pendente'
     });
     setEditingFinanceiro(null);
@@ -117,6 +131,9 @@ const FinanceiroTab = ({ entradaId }) => {
     e.preventDefault();
     try {
       setLoading(true);
+      
+      // Debug: Log dos dados que serão enviados
+      console.log('FinanceiroTab - Dados do formulário:', formData);
       
       if (editingFinanceiro) {
         await financeiroService.updateFinanceiro(editingFinanceiro.id, formData);
@@ -138,6 +155,8 @@ const FinanceiroTab = ({ entradaId }) => {
   };
 
   const handleEdit = (financeiro) => {
+    console.log('FinanceiroTab - Editando financeiro:', financeiro);
+    
     setEditingFinanceiro(financeiro);
     setFormData({
       NUMERO_RECIBO: financeiro.numero_recibo || '',
@@ -147,31 +166,68 @@ const FinanceiroTab = ({ entradaId }) => {
       NUMERO_NOTA_FISCAL: financeiro.numero_nota_fiscal || '',
       VALOR_NOTA_FISCAL: financeiro.valor_nota_fiscal || '',
       DATA_PAGAMENTO_NOTA_FISCAL: financeiro.data_pagamento_nota_fiscal || '',
-      OBSERVACAO: financeiro.observacao || '',
+      OBSERVACOES: financeiro.observacao || '',
       StatusPG: financeiro.status_pagamento || 'Pendente'
     });
+    
     setEditModalOpen(true);
   };
 
-  const handleDelete = async (financeiro) => {
-    if (window.confirm('Tem certeza que deseja excluir este lançamento financeiro?')) {
-      try {
-        setLoading(true);
-        await financeiroService.deleteFinanceiro(financeiro.id);
-        setSuccess('Lançamento financeiro excluído com sucesso!');
-        fetchFinanceiros();
-      } catch (error) {
-        setError('Erro ao excluir lançamento financeiro');
-        console.error('Erro ao excluir financeiro:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
 
   const handleCloseModal = () => {
     setEditModalOpen(false);
     resetForm();
+  };
+
+  const handleDelete = (financeiro) => {
+    setFinanceiroToDelete(financeiro);
+    setDeleteDialogOpen(true);
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setFinanceiroToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!financeiroToDelete) return;
+    
+    try {
+      setLoading(true);
+      await financeiroService.deleteFinanceiro(financeiroToDelete.id);
+      setSuccess('Lançamento financeiro excluído com sucesso!');
+      fetchFinanceiros();
+      setDeleteDialogOpen(false);
+      setFinanceiroToDelete(null);
+    } catch (error) {
+      setError('Erro ao excluir lançamento financeiro');
+      console.error('Erro ao excluir financeiro:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleStatusChange = async (financeiro, newStatus) => {
+    try {
+      setLoading(true);
+      await financeiroService.updateStatus(financeiro.id, newStatus);
+      setSuccess(`Status atualizado para "${newStatus}" com sucesso!`);
+      
+      // Atualizar o status na lista local sem recarregar
+      setFinanceiros(prevFinanceiros => 
+        prevFinanceiros.map(item => 
+          item.id === financeiro.id 
+            ? { ...item, status_pagamento: newStatus }
+            : item
+        )
+      );
+    } catch (error) {
+      setError('Erro ao atualizar status do lançamento');
+      console.error('Erro ao atualizar status:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (value) => {
@@ -256,25 +312,47 @@ const FinanceiroTab = ({ entradaId }) => {
                   <TableCell>{formatCurrency(financeiro.valor_nota_fiscal)}</TableCell>
                   <TableCell>{formatDate(financeiro.data_pagamento_nota_fiscal)}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={financeiro.status_pagamento}
-                      color={statusColors[financeiro.status_pagamento] || 'default'}
-                      size="small"
-                    />
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={financeiro.status_pagamento === 'Pago'}
+                            onChange={(e) => {
+                              const newStatus = e.target.checked ? 'Pago' : 'Pendente';
+                              handleStatusChange(financeiro, newStatus);
+                            }}
+                            disabled={loading}
+                            size="small"
+                          />
+                        }
+                        label=""
+                        sx={{ margin: 0 }}
+                      />
+                      <Chip
+                        label={financeiro.status_pagamento}
+                        color={statusColors[financeiro.status_pagamento] || 'default'}
+                        size="small"
+                        variant={financeiro.status_pagamento === 'Pago' ? 'filled' : 'outlined'}
+                      />
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <IconButton
-                      size="small"
+                      edge="end"
+                      aria-label="editar"
                       onClick={() => handleEdit(financeiro)}
+                      color="primary"
+                      sx={{ mr: 1 }}
                       disabled={loading}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
-                      size="small"
+                      edge="end"
+                      aria-label="deletar"
                       onClick={() => handleDelete(financeiro)}
-                      disabled={loading}
                       color="error"
+                      disabled={loading}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -311,18 +389,44 @@ const FinanceiroTab = ({ entradaId }) => {
         onClose={handleCloseModal}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }
+        }}
       >
         <DialogTitle>
           {editingFinanceiro ? 'Editar Lançamento Financeiro' : 'Novo Lançamento Financeiro'}
         </DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Grid container spacing={2}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <DialogContent sx={{ 
+            flex: 1, 
+            overflow: 'hidden',
+            p: 0
+          }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs value={activeTab} onChange={handleTabChange} aria-label="abas do lançamento financeiro">
+                <Tab label="Dados Financeiros" />
+                <Tab label="Observações" />
+              </Tabs>
+            </Box>
+            
+            <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+              {activeTab === 0 && (
+                <Grid container spacing={3}>
+              {/* Seção 1: Dados do Recibo */}
               <Grid item xs={12}>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                  Dados do Recibo
-                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                    Dados do Recibo
+                  </Typography>
+                  <Divider sx={{ mt: 1 }} />
+                </Box>
               </Grid>
+              
               <Grid item xs={6}>
                 <TextField
                   name="NUMERO_RECIBO"
@@ -330,6 +434,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   value={formData.NUMERO_RECIBO}
                   onChange={handleInputChange}
                   fullWidth
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -341,6 +446,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   inputProps={{ step: "0.01", min: "0" }}
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -352,10 +458,11 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth>
+                <FormControl fullWidth variant="outlined">
                   <InputLabel>Status</InputLabel>
                   <Select
                     name="StatusPG"
@@ -372,11 +479,16 @@ const FinanceiroTab = ({ entradaId }) => {
                 </FormControl>
               </Grid>
               
+              {/* Seção 2: Dados da Nota Fiscal */}
               <Grid item xs={12}>
-                <Typography variant="h6" sx={{ mb: 2, mt: 2, color: 'primary.main' }}>
-                  Dados da Nota Fiscal
-                </Typography>
+                <Box sx={{ mb: 2, mt: 3 }}>
+                  <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                    Dados da Nota Fiscal
+                  </Typography>
+                  <Divider sx={{ mt: 1 }} />
+                </Box>
               </Grid>
+              
               <Grid item xs={6}>
                 <TextField
                   name="DATA_NOTA_FISCAL"
@@ -386,6 +498,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -395,6 +508,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   value={formData.NUMERO_NOTA_FISCAL}
                   onChange={handleInputChange}
                   fullWidth
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -406,6 +520,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   inputProps={{ step: "0.01", min: "0" }}
+                  variant="outlined"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -417,23 +532,31 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <TextField
-                  name="OBSERVACAO"
-                  label="Observação"
-                  value={formData.OBSERVACAO}
-                  onChange={handleInputChange}
-                  fullWidth
-                  multiline
-                  rows={3}
+                  variant="outlined"
                 />
               </Grid>
             </Grid>
+              )}
+              
+              {activeTab === 1 && (
+                <FinanceiroObservacoesFeed 
+                  financeiroId={editingFinanceiro?.id}
+                  observacaoAtual={formData.OBSERVACOES}
+                  onObservacaoChange={(observacao) => {
+                    console.log('FinanceiroTab - Observação alterada:', observacao);
+                    setFormData(prev => ({ ...prev, OBSERVACOES: observacao }));
+                  }}
+                />
+              )}
+            </Box>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ 
+            p: 3, 
+            pt: 2, 
+            borderTop: '1px solid #e0e0e0',
+            backgroundColor: '#fafafa',
+            flexShrink: 0
+          }}>
             <Button
               onClick={handleCloseModal}
               disabled={loading}
@@ -473,6 +596,53 @@ const FinanceiroTab = ({ entradaId }) => {
           {success}
         </Alert>
       </Snackbar>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={cancelDelete}
+        aria-labelledby="delete-dialog-title"
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(15px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            WebkitBackdropFilter: 'blur(15px)'
+          }
+        }}
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja deletar o lançamento financeiro "{financeiroToDelete?.numero_recibo || financeiroToDelete?.numero_nota_fiscal || 'ID: ' + financeiroToDelete?.id}"? 
+            Esta ação não pode ser desfeita.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={cancelDelete} 
+            variant="contained" 
+            color="error"
+          >
+            NÃO
+          </Button>
+          <Button 
+            onClick={confirmDelete} 
+            variant="outlined" 
+            sx={{ 
+              color: 'grey.600',
+              borderColor: 'grey.400',
+              '&:hover': {
+                borderColor: 'grey.500',
+                backgroundColor: 'grey.50'
+              }
+            }}
+          >
+            Deletar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

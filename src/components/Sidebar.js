@@ -15,18 +15,16 @@ import {
 import {
   Dashboard as DashboardIcon,
   Assignment as AssignmentIcon,
-  Gavel as JudicialIcon,
-  Business as PrestadoresIcon,
   Assessment as RelatoriosIcon,
   People as UsuariosIcon,
   PersonAdd as ColaboradorIcon,
   Work as WorkIcon,
   DirectionsCar as CarIcon,
   Security as SecurityIcon,
-  Logout as LogoutIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  TrendingUp as FinanceiroIcon
 } from '@mui/icons-material';
 import useAuthStore from '../store/authStore';
 
@@ -46,34 +44,26 @@ const mainMenuItems = [
     path: '/dashboard/registrodeentrada',
     permission: 'registros'
   },
+];
+
+// Sub-itens da seção "Relatórios"
+const relatoriosSubItems = [
   {
-    text: 'Judicial',
-    icon: <JudicialIcon />,
-    path: '/dashboard/judicial',
-    permission: 'judicial'
-  },
-  {
-    text: 'Prestadores',
-    icon: <PrestadoresIcon />,
-    path: '/dashboard/prestadores',
-    permission: 'prestadores'
-  },
-  {
-    text: 'Relatórios',
-    icon: <RelatoriosIcon />,
-    path: '/dashboard/relatorios',
+    text: 'Financeiro',
+    icon: <FinanceiroIcon />,
+    path: '/dashboard/relatorios/financeiro',
     permission: 'relatorios'
-  },
-  {
-    text: 'Usuários',
-    icon: <UsuariosIcon />,
-    path: '/dashboard/usuarios',
-    permission: 'usuarios'
   }
 ];
 
 // Sub-itens da seção "Gerenciar"
 const gerenciarSubItems = [
+  {
+    text: 'Usuários',
+    icon: <UsuariosIcon />,
+    path: '/dashboard/usuarios',
+    permission: 'usuarios'
+  },
   {
     text: 'Colaboradores',
     icon: <ColaboradorIcon />,
@@ -105,6 +95,7 @@ const Sidebar = ({ open, onClose }) => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const [gerenciarExpanded, setGerenciarExpanded] = useState(false);
+  const [relatoriosExpanded, setRelatoriosExpanded] = useState(false);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -114,13 +105,13 @@ const Sidebar = ({ open, onClose }) => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const handleGerenciarToggle = () => {
     setGerenciarExpanded(!gerenciarExpanded);
+  };
+
+  const handleRelatoriosToggle = () => {
+    setRelatoriosExpanded(!relatoriosExpanded);
   };
 
   const hasPermission = (permission) => {
@@ -137,6 +128,10 @@ const Sidebar = ({ open, onClose }) => {
 
   const isGerenciarPath = (path) => {
     return gerenciarSubItems.some(item => item.path === path);
+  };
+
+  const isRelatoriosPath = (path) => {
+    return relatoriosSubItems.some(item => item.path === path);
   };
 
   return (
@@ -218,6 +213,52 @@ const Sidebar = ({ open, onClose }) => {
           </ListItem>
         ))}
 
+        {/* Seção Relatórios */}
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleRelatoriosToggle}>
+            <ListItemIcon>
+              <RelatoriosIcon />
+            </ListItemIcon>
+            <ListItemText primary="Relatórios" />
+            {relatoriosExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </ListItemButton>
+        </ListItem>
+        
+        <Collapse in={relatoriosExpanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {relatoriosSubItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  selected={location.pathname === item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  sx={{
+                    pl: 4, // Indentação para sub-itens
+                    '&.Mui-selected': {
+                      backgroundColor: 'transparent',
+                      color: 'black',
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'black',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
+
         {/* Seção Gerenciar */}
         <ListItem disablePadding>
           <ListItemButton onClick={handleGerenciarToggle}>
@@ -265,18 +306,6 @@ const Sidebar = ({ open, onClose }) => {
         </Collapse>
       </List>
       
-      <Divider />
-      
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText primary="Sair" />
-          </ListItemButton>
-        </ListItem>
-      </List>
     </Drawer>
   );
 };

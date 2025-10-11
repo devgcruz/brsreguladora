@@ -157,7 +157,13 @@ class FinanceiroController extends Controller
         $data = $request->validated();
         $data['ID_ENTRADA'] = $entrada->Id_Entrada;
         
+        // Log para debug
+        \Log::info('FinanceiroController::storeForEntrada - Dados recebidos:', $data);
+        
         $financeiro = Financeiro::create($data);
+        
+        // Log para debug
+        \Log::info('FinanceiroController::storeForEntrada - Lançamento criado:', $financeiro->toArray());
 
         return response()->json([
             'success' => true,

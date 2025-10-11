@@ -27,10 +27,12 @@ import {
 } from '@mui/icons-material';
 import PdfModal from './PdfModal';
 import FinanceiroTab from './financeiro/FinanceiroTab';
+import ObservacoesFeed from './ObservacoesFeed';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
+import { validatePlaca } from '../utils/placaValidator';
 
 // Estado inicial vazio para o formulário (apenas campos de texto)
 const initialState = {
@@ -78,11 +80,14 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     reloadData: reloadDropdowns
   } = useRegistroEntradaDropdowns();
 
-  // Estado para observações em formato de posts
-  const [observacoes, setObservacoes] = useState([]);
-  const [novaObservacao, setNovaObservacao] = useState('');
+  // Observações agora são gerenciadas na aba dedicada via ObservacoesFeed
   
   // Estados para validação de placa
+  const [placaValidation, setPlacaValidation] = useState({
+    isValid: null,
+    message: '',
+    format: null
+  });
   const [placaSnackbar, setPlacaSnackbar] = useState({
     open: false,
     message: '',
@@ -145,51 +150,46 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         observacoes: String(registroData.observacoes || '')
       });
 
-      // Carregar observações existentes
-      if (registroData.observacoes_posts && Array.isArray(registroData.observacoes_posts)) {
-        setObservacoes(registroData.observacoes_posts);
-      } else {
-        setObservacoes([]);
-      }
+      // Observações são carregadas automaticamente na aba dedicada
     } else if (!open) {
       setTextFieldsData(initialState); // Limpa ao fechar
     }
   }, [open, registroData, initializeDropdownValues]);
 
 
+  // Função para validar formato da placa
+  const validatePlacaFormat = useCallback((placa) => {
+    if (!placa || placa.trim() === '') {
+      setPlacaValidation({
+        isValid: null,
+        message: '',
+        format: null
+      });
+      return false;
+    }
+
+    const validation = validatePlaca(placa);
+    setPlacaValidation(validation);
+    return validation.isValid;
+  }, []);
+
   // Handler para os campos de TEXTO
   const handleTextFieldChange = useCallback((field) => (event) => {
-    setTextFieldsData(prev => ({ ...prev, [field]: event.target.value }));
-  }, []);
+    const value = event.target.value;
+    setTextFieldsData(prev => ({ ...prev, [field]: value }));
+    
+    // Validar formato da placa em tempo real
+    if (field === 'placa') {
+      validatePlacaFormat(value);
+    }
+  }, [validatePlacaFormat]);
 
   // Handler para os DROPDOWNS vindo do hook
   const handleSelectChange = useCallback((field) => (event) => {
     handleDropdownChange(field, event.target.value);
   }, [handleDropdownChange]);
 
-  // Função para adicionar nova observação
-  const adicionarObservacao = useCallback(() => {
-    if (novaObservacao.trim()) {
-      const novaObs = {
-        id: String(Date.now()),
-        texto: novaObservacao.trim(),
-        autor: 'Usuário Atual', // Em produção, pegar do contexto de autenticação
-        data: new Date().toLocaleString('pt-BR'),
-        timestamp: new Date().toISOString()
-      };
-      
-      setObservacoes(prev => {
-        const novasObservacoes = [novaObs, ...prev];
-        return novasObservacoes;
-      });
-      setNovaObservacao('');
-    }
-  }, [novaObservacao]);
-
-  // Função para remover observação
-  const removerObservacao = useCallback((id) => {
-    setObservacoes(prev => prev.filter(obs => obs.id !== id));
-  }, []);
+  // Funções de observações removidas - agora gerenciadas via ObservacoesFeed
 
   const handleOpenPdfModal = useCallback(() => {
     setPdfModalOpen(true);
@@ -253,6 +253,14 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         throw new Error('Por favor, preencha os campos obrigatórios');
       }
 
+      // Validação de placa
+      if (finalData.placa && finalData.placa.trim() !== '') {
+        const placaValidation = validatePlaca(finalData.placa.trim());
+        if (!placaValidation.isValid) {
+          throw new Error(`Placa inválida: ${placaValidation.message}`);
+        }
+      }
+
       // Preparar dados para a API
       const dadosParaAPI = {
         ID_COLABORADOR: finalData.colaborador ? colaboradorOptions.find(c => c && c.label === finalData.colaborador)?.id : null,
@@ -289,9 +297,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         DATA_PAGAMENTO: finalData.dataPagamento,
         HONORARIO: finalData.honorario,
         NOME_BANCO: finalData.nomeBanco,
-        OBSERVACOES: finalData.observacoes,
-        // Observações em formato de posts
-        OBSERVACOES_POSTS: observacoes
+        OBSERVACOES: finalData.observacoes
       };
 
       // Atualizar via API
@@ -328,7 +334,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     } finally {
       // Salvamento concluído
     }
-  }, [textFieldsData, dropdownValues, onSave, colaboradorOptions, registroData, observacoes]);
+  }, [textFieldsData, dropdownValues, onSave, colaboradorOptions, registroData]);
 
   const handleClose = useCallback(() => {
     // Resetar todos os campos para strings vazias para evitar mudança de controlado para não controlado
@@ -336,9 +342,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     setPdfModalOpen(false);
     setError('');
     setSuccess('');
-    setObservacoes([]);
-    setNovaObservacao('');
+    // Observações são gerenciadas via aba dedicada
     // Limpar estados de validação de placa
+    setPlacaValidation({
+      isValid: null,
+      message: '',
+      format: null
+    });
     setPlacaSnackbar({
       open: false,
       message: '',
@@ -439,12 +449,16 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             <TextField
               fullWidth
               label="Placa"
-              placeholder="Digite a placa..."
+              placeholder="Digite a placa (ABC-1234 ou ABC1D23)..."
               value={textFieldsData.placa}
               onChange={handleTextFieldChange('placa')}
               variant="outlined"
               size="small"
               autoComplete="off"
+              error={placaValidation.isValid === false}
+              helperText={
+                placaValidation.message || 'Aceita padrão antigo (ABC-1234) ou Mercosul (ABC1D23)'
+              }
               sx={fieldSx}
             />
           </Grid>
@@ -811,151 +825,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             </>
           )}
 
-          {/* Seção 4: Observações em formato de Posts */}
-          <Grid item xs={12}>
-            <Typography 
-              variant="subtitle2" 
-              gutterBottom 
-              sx={{ 
-                color: 'primary.main', 
-                fontWeight: 'bold', 
-                mb: 1, 
-                mt: 1,
-                fontSize: { xs: '0.9rem', sm: '1rem' }
-              }}
-            >
-              Observações
-            </Typography>
-          </Grid>
-
-          {/* Campo para adicionar nova observação */}
-          <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              gap: { xs: 0.5, sm: 1 }, 
-              mb: 2,
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: { xs: 'stretch', sm: 'flex-end' }
-            }}>
-              <TextField
-                fullWidth
-                label="Nova observação"
-                multiline
-                rows={2}
-                value={novaObservacao}
-                onChange={(e) => setNovaObservacao(e.target.value)}
-                placeholder="Digite uma nova observação..."
-                variant="outlined"
-                size="small"
-                sx={fieldSx}
-              />
-              <Button
-                variant="contained"
-                onClick={adicionarObservacao}
-                disabled={!novaObservacao.trim()}
-                sx={{ 
-                  minWidth: 'auto', 
-                  px: { xs: 2, sm: 3 },
-                  py: { xs: 1, sm: 1.5 },
-                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Postar
-              </Button>
-            </Box>
-          </Grid>
-
-          {/* Lista de observações em formato de posts */}
-          {observacoes.length > 0 && (
-            <Grid item xs={12}>
-              <Box sx={{ 
-                maxHeight: { xs: 200, sm: 300 }, 
-                overflow: 'auto', 
-                border: '1px solid #e0e0e0', 
-                borderRadius: 1, 
-                p: { xs: 0.5, sm: 1 },
-                '&::-webkit-scrollbar': {
-                  width: '6px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: '#f1f1f1',
-                  borderRadius: '3px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: '#c1c1c1',
-                  borderRadius: '3px',
-                  '&:hover': {
-                    backgroundColor: '#a8a8a8',
-                  },
-                },
-              }}>
-                {observacoes.map((obs) => (
-                  <Box
-                    key={obs.id}
-                    sx={{
-                      p: { xs: 1, sm: 2 },
-                      mb: 1,
-                      bgcolor: '#f5f5f5',
-                      borderRadius: 1,
-                      border: '1px solid #e0e0e0'
-                    }}
-                  >
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'flex-start', 
-                      mb: 1,
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      gap: { xs: 0.5, sm: 0 }
-                    }}>
-                      <Typography 
-                        variant="subtitle2" 
-                        sx={{ 
-                          fontWeight: 'bold',
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' }
-                        }}
-                      >
-                        {obs.autor}
-                      </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1,
-                        flexDirection: { xs: 'row', sm: 'row' }
-                      }}>
-                        <Typography 
-                          variant="caption" 
-                          color="text.secondary"
-                          sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
-                        >
-                          {obs.data}
-                        </Typography>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => removerObservacao(obs.id)}
-                          sx={{ 
-                            minWidth: 'auto', 
-                            p: { xs: 0.25, sm: 0.5 },
-                            fontSize: { xs: '0.8rem', sm: '0.875rem' }
-                          }}
-                        >
-                          ×
-                        </Button>
-                      </Box>
-                    </Box>
-                    <Typography 
-                      variant="body2"
-                      sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
-                    >
-                      {obs.texto}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-          )}
+          {/* Observações agora são gerenciadas na aba dedicada */}
 
         </Grid>
       </Box>
@@ -1071,8 +941,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               <Tabs value={activeTab} onChange={handleTabChange} aria-label="abas do registro">
                 <Tab label="Dados do Registro" />
                 <Tab label="Financeiro" />
-                <Tab label="Judicial" />
-                <Tab label="Documentos" />
+                <Tab label="Observações" />
               </Tabs>
             </Box>
             
@@ -1088,17 +957,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                   </Typography>
                 </Box>
               )}
-              {activeTab === 2 && (
-                <Box textAlign="center" p={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Funcionalidade Judicial em desenvolvimento.
-                  </Typography>
-                </Box>
+              {activeTab === 2 && registroData?.id && (
+                <ObservacoesFeed entradaId={registroData.id} />
               )}
-              {activeTab === 3 && (
+              {activeTab === 2 && !registroData?.id && (
                 <Box textAlign="center" p={3}>
                   <Typography variant="body2" color="text.secondary">
-                    Funcionalidade de Documentos em desenvolvimento.
+                    Dados da entrada não disponíveis para carregar observações.
                   </Typography>
                 </Box>
               )}

@@ -24,7 +24,6 @@ import pdfService from '../services/pdfService';
 
 const PdfModal = ({ open, onClose, registroId }) => {
   const [pdfs, setPdfs] = useState([]);
-  const [descricao, setDescricao] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -86,8 +85,8 @@ const PdfModal = ({ open, onClose, registroId }) => {
             continue;
           }
 
-          // Fazer upload de cada arquivo
-          const response = await pdfService.uploadPdf(registroId, descricao || file.name, file);
+          // Fazer upload de cada arquivo usando o nome do arquivo como descrição
+          const response = await pdfService.uploadPdf(registroId, file.name, file);
           
           if (response.success) {
             successCount++;
@@ -100,7 +99,6 @@ const PdfModal = ({ open, onClose, registroId }) => {
         // Mostrar resultado
         if (successCount > 0) {
           setSuccess(`${successCount} PDF(s) enviado(s) com sucesso!`);
-          setDescricao('');
           await loadPdfs(); // Recarregar lista
         }
         
@@ -159,7 +157,6 @@ const PdfModal = ({ open, onClose, registroId }) => {
 
 
   const handleClose = () => {
-    setDescricao('');
     setError('');
     setSuccess('');
     setViewingPdf(null);
@@ -195,15 +192,6 @@ const PdfModal = ({ open, onClose, registroId }) => {
         )}
 
         <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            label="Descrição do PDF (opcional - será usado para todos os arquivos)"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            sx={{ mb: 2 }}
-            helperText="Se não preenchido, será usado o nome original de cada arquivo"
-          />
-          
           <Button
             variant="contained"
             component="label"
@@ -220,6 +208,9 @@ const PdfModal = ({ open, onClose, registroId }) => {
               onChange={handleFileUpload}
             />
           </Button>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Os PDFs serão salvos com o nome exato do arquivo
+          </Typography>
         </Box>
 
 

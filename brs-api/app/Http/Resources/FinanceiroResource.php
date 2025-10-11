@@ -33,7 +33,7 @@ class FinanceiroResource extends JsonResource
             'numero_nota_fiscal' => $this->NUMERO_NOTA_FISCAL,
             'valor_nota_fiscal' => $this->VALOR_NOTA_FISCAL,
             'data_pagamento_nota_fiscal' => $this->DATA_PAGAMENTO_NOTA_FISCAL?->format('Y-m-d'),
-            'observacao' => $this->OBSERVACAO,
+            'observacao' => $this->OBSERVACOES,
             'status_pagamento' => $this->StatusPG,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at

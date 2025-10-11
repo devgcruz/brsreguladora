@@ -199,8 +199,8 @@ const ProfilePage = () => {
     if (profilePhoto) {
       return URL.createObjectURL(profilePhoto);
     }
-    if (user?.profile_photo_path) {
-      return `http://localhost:8000/storage/${user.profile_photo_path}`;
+    if (user?.profile_photo_url) {
+      return user.profile_photo_url;
     }
     return null;
   };

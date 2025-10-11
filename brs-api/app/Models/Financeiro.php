@@ -22,7 +22,7 @@ class Financeiro extends Model
         'NUMERO_NOTA_FISCAL',
         'VALOR_NOTA_FISCAL',
         'DATA_PAGAMENTO_NOTA_FISCAL',
-        'OBSERVACAO',
+        'OBSERVACOES',
         'StatusPG'
     ];
 

@@ -41,6 +41,7 @@ const useAuthStore = create((set, get) => ({
           
           if (currentUser) {
             console.log('✅ AuthStore: Usuário autenticado:', currentUser.nome);
+            console.log('✅ AuthStore: Dados completos do usuário:', currentUser);
             set({
               token,
               isAuthenticated: true,
@@ -140,6 +141,7 @@ const useAuthStore = create((set, get) => ({
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_data', JSON.stringify(userData));
         
+        console.log('✅ AuthStore: Dados do usuário no login:', userData);
         set({
           user: userData,
           token: token,

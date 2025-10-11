@@ -301,16 +301,19 @@ const GenericCrudPage = ({
                       </TableCell>
                       <TableCell align="center">
                         <IconButton
+                          edge="end"
+                          aria-label="editar"
                           color="primary"
+                          sx={{ mr: 1 }}
                           onClick={() => handleEditItem(item)}
-                          title="Editar"
                         >
                           <EditIcon />
                         </IconButton>
                         <IconButton
+                          edge="end"
+                          aria-label="deletar"
                           color="error"
                           onClick={() => handleDeleteItem(item)}
-                          title="Excluir"
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -335,18 +338,21 @@ const GenericCrudPage = ({
                     
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                       <IconButton
+                        edge="end"
+                        aria-label="editar"
                         color="primary"
-                        onClick={() => handleEditItem(item)}
-                        title="Editar"
                         size="small"
+                        sx={{ mr: 1 }}
+                        onClick={() => handleEditItem(item)}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
+                        edge="end"
+                        aria-label="deletar"
                         color="error"
-                        onClick={() => handleDeleteItem(item)}
-                        title="Excluir"
                         size="small"
+                        onClick={() => handleDeleteItem(item)}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -443,28 +449,46 @@ const GenericCrudPage = ({
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, item: null })}
-        disableEnforceFocus
-        disableAutoFocus
-        disableRestoreFocus
+        aria-labelledby="delete-dialog-title"
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(15px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            WebkitBackdropFilter: 'blur(15px)'
+          }
+        }}
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle id="delete-dialog-title">
+          Confirmar Exclusão
+        </DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir o {itemName} "{deleteDialog.item?.nome}"?
+            Tem certeza que deseja deletar o {itemName} "{deleteDialog.item?.nome}"? 
             Esta ação não pode ser desfeita.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialog({ open: false, item: null })}>
-            Cancelar
+          <Button 
+            onClick={() => setDeleteDialog({ open: false, item: null })} 
+            variant="contained" 
+            color="error"
+          >
+            NÃO
           </Button>
           <Button 
             onClick={handleConfirmDelete} 
-            color="error" 
-            variant="contained"
+            variant="outlined" 
             disabled={loading}
+            sx={{ 
+              color: 'grey.600',
+              borderColor: 'grey.400',
+              '&:hover': {
+                borderColor: 'grey.500',
+                backgroundColor: 'grey.50'
+              }
+            }}
           >
-            Excluir
+            Deletar
           </Button>
         </DialogActions>
       </Dialog>

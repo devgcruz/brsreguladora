@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\EntradaController;
 use App\Http\Controllers\FinanceiroController;
+use App\Http\Controllers\FinanceiroStatusController;
 use App\Http\Controllers\JudicialController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\PrestadorController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\PdfController;
 use App\Http\Controllers\PosicaoController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\SeguradoraController;
+use App\Http\Controllers\ObservacaoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +57,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Financeiros aninhados por entrada
     Route::get('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'indexByEntrada']);
     Route::post('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'storeForEntrada']);
+    
+        // Observações aninhadas por entrada
+        Route::get('/entradas/{entrada}/observacoes', [ObservacaoController::class, 'index']);
+        Route::post('/entradas/{entrada}/observacoes', [ObservacaoController::class, 'store']);
+        Route::delete('/observacoes/{observacao}', [ObservacaoController::class, 'destroy']);
 
     // PDFs
     Route::get('/pdfs', [PdfController::class, 'index']);
@@ -66,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('financeiro', FinanceiroController::class);
     Route::get('/financeiro/entrada/{entrada}', [FinanceiroController::class, 'getByEntrada']);
     Route::get('/financeiro/statistics', [FinanceiroController::class, 'statistics']);
+    Route::patch('/financeiros/{financeiro}/status', [FinanceiroStatusController::class, 'updateStatus']);
 
     // Judicial
     Route::apiResource('judicial', JudicialController::class);

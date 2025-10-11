@@ -12,7 +12,8 @@ import {
 import {
   AccountCircle,
   Settings,
-  Logout
+  Logout,
+  ExpandMore
 } from '@mui/icons-material';
 import useAuthStore from '../store/authStore';
 
@@ -42,8 +43,8 @@ const ProfileDropdown = () => {
   };
 
   const getProfilePhotoUrl = () => {
-    if (user?.profile_photo_path) {
-      return `http://localhost:8000/storage/${user.profile_photo_path}`;
+    if (user?.profile_photo_url) {
+      return user.profile_photo_url;
     }
     return null;
   };
@@ -62,10 +63,20 @@ const ProfileDropdown = () => {
 
   return (
     <>
-      <IconButton
+      <Box
         onClick={handleClick}
-        size="small"
-        sx={{ ml: 2 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          cursor: 'pointer',
+          padding: '4px 8px',
+          borderRadius: '8px',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+          },
+          ml: 2
+        }}
         aria-controls={open ? 'profile-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
@@ -76,7 +87,42 @@ const ProfileDropdown = () => {
         >
           {getInitials()}
         </Avatar>
-      </IconButton>
+        
+        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'white',
+              fontSize: '0.75rem',
+              lineHeight: 1.2,
+              textAlign: 'right'
+            }}
+          >
+            Bem-vindo,
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'white',
+              fontSize: '0.75rem',
+              lineHeight: 1.2,
+              textAlign: 'right',
+              fontWeight: 'bold'
+            }}
+          >
+            {user?.nome || 'Usuário'}
+          </Typography>
+        </Box>
+        
+        <ExpandMore 
+          sx={{ 
+            color: 'white', 
+            fontSize: '20px',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease-in-out'
+          }} 
+        />
+      </Box>
       
       <Menu
         id="profile-menu"
@@ -139,5 +185,6 @@ const ProfileDropdown = () => {
 };
 
 export default ProfileDropdown;
+
 
 

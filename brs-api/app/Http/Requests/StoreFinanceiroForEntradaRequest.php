@@ -30,7 +30,7 @@ class StoreFinanceiroForEntradaRequest extends FormRequest
             'NUMERO_NOTA_FISCAL' => 'nullable|string|max:100',
             'VALOR_NOTA_FISCAL' => 'nullable|numeric|min:0',
             'DATA_PAGAMENTO_NOTA_FISCAL' => 'nullable|date',
-            'OBSERVACAO' => 'nullable|string',
+            'OBSERVACOES' => 'nullable|string',
             'StatusPG' => 'nullable|string|max:50'
         ];
     }

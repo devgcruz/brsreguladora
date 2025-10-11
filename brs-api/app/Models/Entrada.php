@@ -92,5 +92,13 @@ class Entrada extends Model
     {
         return $this->hasMany(Pdf::class, 'ID_ENTRADA', 'Id_Entrada');
     }
+
+    /**
+     * Relacionamento com observações
+     */
+    public function observacoes(): HasMany
+    {
+        return $this->hasMany(Observacao::class, 'entrada_id', 'Id_Entrada');
+    }
 }
 

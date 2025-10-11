@@ -16,34 +16,22 @@ class EntradaService
     public function createEntrada(array $data): Entrada
     {
         return DB::transaction(function () use ($data) {
-            // Log dos dados recebidos para debug
-            \Log::info('Dados recebidos para criação de entrada:', $data);
-            
-            // Log específico para observações
-            if (isset($data['OBSERVACOES_POSTS'])) {
-                \Log::info('📝 EntradaService - Observações recebidas:', [
-                    'tipo' => gettype($data['OBSERVACOES_POSTS']),
-                    'valor' => $data['OBSERVACOES_POSTS'],
-                    'is_array' => is_array($data['OBSERVACOES_POSTS']),
-                    'count' => is_array($data['OBSERVACOES_POSTS']) ? count($data['OBSERVACOES_POSTS']) : 'N/A'
-                ]);
-            } else {
-                \Log::info('❌ EntradaService - OBSERVACOES_POSTS não encontrado');
-            }
             
             $entrada = Entrada::create($data);
             
-            // Log após criação
-            \Log::info('📝 EntradaService - Registro criado:', [
-                'id' => $entrada->Id_Entrada,
-                'observacoes_posts' => $entrada->OBSERVACOES_POSTS,
-                'observacoes_posts_tipo' => gettype($entrada->OBSERVACOES_POSTS)
-            ]);
-
+            // Criar observação inicial se fornecida
+            if (!empty($data['OBSERVACOES'])) {
+                \App\Models\Observacao::create([
+                    'entrada_id' => $entrada->Id_Entrada,
+                    'usuario_id' => auth()->id(),
+                    'texto' => $data['OBSERVACOES']
+                ]);
+            }
+            
             // Não criar mais registro financeiro automaticamente
             // Os lançamentos financeiros serão criados através da aba específica
 
-            return $entrada->load(['colaborador', 'financeiros', 'judicial', 'pdfs']);
+            return $entrada->load(['colaborador', 'financeiros', 'judicial', 'pdfs', 'observacoes']);
         });
     }
 

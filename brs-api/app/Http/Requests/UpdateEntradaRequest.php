@@ -64,9 +64,7 @@ class UpdateEntradaRequest extends FormRequest
             'DATA_PAGAMENTO' => 'nullable|date',
             'HONORARIO' => 'nullable|string|max:100',
             'NOME_BANCO' => 'nullable|string|max:100',
-            'OBSERVACOES' => 'nullable|string',
-            // Observações em formato de posts - validação simplificada
-            'OBSERVACOES_POSTS' => 'nullable|array'
+            // Observações agora são gerenciadas via API separada
         ];
     }
 

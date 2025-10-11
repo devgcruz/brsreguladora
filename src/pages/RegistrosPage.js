@@ -237,11 +237,17 @@ const RegistrosPage = () => {
 
   // Função para obter o último post de observação
   const getUltimaObservacao = (entrada) => {
-    if (!entrada.observacoes_posts || !Array.isArray(entrada.observacoes_posts) || entrada.observacoes_posts.length === 0) {
-      return null;
+    // Priorizar observações dinâmicas (nova API)
+    if (entrada.observacoes && Array.isArray(entrada.observacoes) && entrada.observacoes.length > 0) {
+      return entrada.observacoes[entrada.observacoes.length - 1];
     }
     
-    return entrada.observacoes_posts[entrada.observacoes_posts.length - 1];
+    // Fallback para observações antigas
+    if (entrada.observacoes_posts && Array.isArray(entrada.observacoes_posts) && entrada.observacoes_posts.length > 0) {
+      return entrada.observacoes_posts[entrada.observacoes_posts.length - 1];
+    }
+    
+    return null;
   };
 
   // Função para formatar a data da observação
@@ -447,7 +453,7 @@ const RegistrosPage = () => {
                 <Box sx={{ mt: 2, flex: 1 }}>
                   {getUltimaObservacao(entrada) ? (
                     <Tooltip
-                      title={<ObservacoesTooltip observacoes={entrada.observacoes_posts} />}
+                      title={<ObservacoesTooltip observacoes={entrada.observacoes || entrada.observacoes_posts} />}
                       placement="top"
                       arrow
                       componentsProps={{

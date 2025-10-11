@@ -50,6 +50,8 @@ const UsuariosPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [usuarioToDelete, setUsuarioToDelete] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
     Usuario: '',
@@ -232,34 +234,46 @@ const UsuariosPage = () => {
   };
 
   // Função para excluir usuário
-  const handleExcluir = async (usuario) => {
-    if (window.confirm(`Tem certeza que deseja excluir o usuário ${usuario.nome}?`)) {
-      try {
-        const response = await userService.deleteUser(usuario.id);
-        
-        if (response.success) {
-          setSnackbar({
-            open: true,
-            message: response.message || 'Usuário excluído com sucesso!',
-            severity: 'success'
-          });
-          carregarUsuarios(); // Recarregar lista
-          carregarEstatisticas(); // Recarregar estatísticas
-        } else {
-          setSnackbar({
-            open: true,
-            message: response.message || 'Erro ao excluir usuário',
-            severity: 'error'
-          });
-        }
-      } catch (err) {
+  const handleExcluir = (usuario) => {
+    setUsuarioToDelete(usuario);
+    setDeleteDialogOpen(true);
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setUsuarioToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!usuarioToDelete) return;
+    
+    try {
+      const response = await userService.deleteUser(usuarioToDelete.id);
+      
+      if (response.success) {
         setSnackbar({
           open: true,
-          message: 'Erro inesperado ao excluir usuário',
+          message: response.message || 'Usuário excluído com sucesso!',
+          severity: 'success'
+        });
+        carregarUsuarios(); // Recarregar lista
+        carregarEstatisticas(); // Recarregar estatísticas
+        setDeleteDialogOpen(false);
+        setUsuarioToDelete(null);
+      } else {
+        setSnackbar({
+          open: true,
+          message: response.message || 'Erro ao excluir usuário',
           severity: 'error'
         });
-        console.error('Erro ao excluir usuário:', err);
       }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Erro inesperado ao excluir usuário',
+        severity: 'error'
+      });
+      console.error('Erro ao excluir usuário:', err);
     }
   };
 
@@ -542,15 +556,19 @@ const UsuariosPage = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Tooltip title="Editar">
                             <IconButton 
-                              size="small" 
+                              edge="end"
+                              aria-label="editar"
                               onClick={() => handleEditarUsuario(usuario)}
+                              color="primary"
+                              sx={{ mr: 1 }}
                             >
                               <EditIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={usuario.status === 'ativo' ? 'Desativar' : 'Ativar'}>
                             <IconButton 
-                              size="small" 
+                              edge="end"
+                              aria-label={usuario.status === 'ativo' ? 'desativar' : 'ativar'}
                               onClick={() => handleToggleStatus(usuario)}
                             >
                               {usuario.status === 'ativo' ? <VisibilityOffIcon /> : <VisibilityIcon />}
@@ -558,7 +576,8 @@ const UsuariosPage = () => {
                           </Tooltip>
                           <Tooltip title="Excluir">
                             <IconButton 
-                              size="small" 
+                              edge="end"
+                              aria-label="deletar"
                               color="error"
                               onClick={() => handleExcluir(usuario)}
                             >
@@ -716,6 +735,53 @@ const UsuariosPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={cancelDelete}
+        aria-labelledby="delete-dialog-title"
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(15px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            WebkitBackdropFilter: 'blur(15px)'
+          }
+        }}
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja deletar o usuário "{usuarioToDelete?.nome}"? 
+            Esta ação não pode ser desfeita.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={cancelDelete} 
+            variant="contained" 
+            color="error"
+          >
+            NÃO
+          </Button>
+          <Button 
+            onClick={confirmDelete} 
+            variant="outlined" 
+            sx={{ 
+              color: 'grey.600',
+              borderColor: 'grey.400',
+              '&:hover': {
+                borderColor: 'grey.500',
+                backgroundColor: 'grey.50'
+              }
+            }}
+          >
+            Deletar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

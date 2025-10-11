@@ -75,6 +75,9 @@ class EntradaResource extends JsonResource
             }),
             'pdfs' => $this->whenLoaded('pdfs', function () {
                 return PdfResource::collection($this->pdfs);
+            }),
+            'observacoes' => $this->whenLoaded('observacoes', function () {
+                return ObservacaoResource::collection($this->observacoes);
             })
         ];
     }

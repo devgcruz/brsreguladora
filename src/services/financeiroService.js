@@ -111,6 +111,20 @@ const financeiroService = {
       console.error('Erro ao buscar estatísticas financeiras:', error);
       throw error;
     }
+  },
+
+  // Atualizar status de um lançamento financeiro
+  async updateStatus(id, newStatus) {
+    try {
+      const response = await makeRequest(`/financeiros/${id}/status`, {
+        method: 'PATCH',
+        body: { status: newStatus }
+      });
+      return response;
+    } catch (error) {
+      console.error('Erro ao atualizar status do financeiro:', error);
+      throw error;
+    }
   }
 };
 

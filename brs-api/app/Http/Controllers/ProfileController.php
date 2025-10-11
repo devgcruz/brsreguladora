@@ -26,7 +26,7 @@ class ProfileController extends Controller
                 'email' => $usuario->email,
                 'profile_photo_path' => $usuario->profile_photo_path,
                 'profile_photo_url' => $usuario->profile_photo_path ? 
-                    Storage::url($usuario->profile_photo_path) : null
+                    url('storage/' . $usuario->profile_photo_path) : null
             ]
         ]);
     }
@@ -73,7 +73,7 @@ class ProfileController extends Controller
                 'email' => $usuario->email,
                 'profile_photo_path' => $usuario->profile_photo_path,
                 'profile_photo_url' => $usuario->profile_photo_path ? 
-                    Storage::url($usuario->profile_photo_path) : null
+                    url('storage/' . $usuario->profile_photo_path) : null
             ]
         ]);
     }
