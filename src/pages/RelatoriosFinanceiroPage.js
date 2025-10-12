@@ -40,6 +40,7 @@ import * as XLSX from 'xlsx';
 // Removido date-fns - usando formatação nativa do JavaScript
 import financeiroService from '../services/financeiroService';
 import entradaService from '../services/entradaService';
+import { exportToExcel } from '../utils/excelExporter';
 
 const RelatoriosFinanceiroPage = () => {
   const [loading, setLoading] = useState(false);
@@ -188,118 +189,56 @@ const RelatoriosFinanceiroPage = () => {
 
   // Função para exportar para Excel
   const exportarParaExcel = () => {
-    try {
-      // Preparar dados para exportação
-      const dadosExportacao = [];
+    // Preparar dados para exportação
+    const dadosExportacao = [];
+    
+    relatorios.forEach((relatorio) => {
+      const { entrada, financeiros } = relatorio;
       
-      relatorios.forEach((relatorio) => {
-        const { entrada, financeiros } = relatorio;
-        
-        if (financeiros.length === 0) {
-          // Se não há lançamentos financeiros, adicionar apenas a entrada com campos vazios
+      if (financeiros.length === 0) {
+        // Se não há lançamentos financeiros, adicionar apenas a entrada com campos vazios
+        dadosExportacao.push({
+          'Data': formatarData(entrada.data_registro),
+          'Veículo': entrada.veiculo || '-',
+          'Placa': entrada.placa || '-',
+          'Chassi': entrada.chassi || '-',
+          'Sinistro': entrada.cod_sinistro || '-',
+          'Despesas': '-',
+          'Data Pagto Despesas': '-',
+          'Nota Fiscal': '-',
+          'Honorários': '-',
+          'Data Pagto Honorários': '-',
+          'Status': '-',
+          'Observações': '-'
+        });
+      } else {
+        // Para cada lançamento financeiro, criar uma linha separada
+        // SEMPRE repetindo os dados do veículo (Data, Veículo, Placa, Chassi, Sinistro)
+        financeiros.forEach((financeiro) => {
           dadosExportacao.push({
             'Data': formatarData(entrada.data_registro),
             'Veículo': entrada.veiculo || '-',
             'Placa': entrada.placa || '-',
             'Chassi': entrada.chassi || '-',
             'Sinistro': entrada.cod_sinistro || '-',
-            'Despesas': '-',
-            'Data Pagto Despesas': '-',
-            'Nota Fiscal': '-',
-            'Honorários': '-',
-            'Data Pagto Honorários': '-',
-            'Status': '-',
-            'Observações': '-'
+            'Despesas': formatarMoeda(financeiro.valor_total_recibo),
+            'Data Pagto Despesas': formatarData(financeiro.data_pagamento_recibo),
+            'Nota Fiscal': financeiro.numero_nota_fiscal || '-',
+            'Honorários': formatarMoeda(financeiro.valor_nota_fiscal),
+            'Data Pagto Honorários': formatarData(financeiro.data_pagamento_nota_fiscal),
+            'Status': financeiro.status_pagamento || 'Pendente',
+            'Observações': financeiro.observacao || financeiro.OBSERVACOES || '-'
           });
-        } else {
-          // Para cada lançamento financeiro, criar uma linha separada
-          // SEMPRE repetindo os dados do veículo (Data, Veículo, Placa, Chassi, Sinistro)
-          financeiros.forEach((financeiro) => {
-            dadosExportacao.push({
-              'Data': formatarData(entrada.data_registro),
-              'Veículo': entrada.veiculo || '-',
-              'Placa': entrada.placa || '-',
-              'Chassi': entrada.chassi || '-',
-              'Sinistro': entrada.cod_sinistro || '-',
-              'Despesas': formatarMoeda(financeiro.valor_total_recibo),
-              'Data Pagto Despesas': formatarData(financeiro.data_pagamento_recibo),
-              'Nota Fiscal': financeiro.numero_nota_fiscal || '-',
-              'Honorários': formatarMoeda(financeiro.valor_nota_fiscal),
-              'Data Pagto Honorários': formatarData(financeiro.data_pagamento_nota_fiscal),
-              'Status': financeiro.status_pagamento || 'Pendente',
-              'Observações': financeiro.observacao || financeiro.OBSERVACOES || '-'
-            });
-          });
-        }
-      });
+        });
+      }
+    });
 
-      // Criar workbook e worksheet
-      const wb = XLSX.utils.book_new();
-      
-      // Criar dados para o Excel com título e dados
-      const excelData = [
-        // Título na primeira linha
-        ['PAGAMENTOS BRS - RELATÓRIOS FINANCEIROS'],
-        // Linha em branco
-        [],
-        // Cabeçalho das colunas
-        ['Data', 'Veículo', 'Placa', 'Chassi', 'Sinistro', 'Despesas', 'Data Pagto Despesas', 'Nota Fiscal', 'Honorários', 'Data Pagto Honorários', 'Status', 'Observações'],
-        // Dados dos lançamentos
-        ...dadosExportacao.map(item => [
-          item['Data'],
-          item['Veículo'],
-          item['Placa'],
-          item['Chassi'],
-          item['Sinistro'],
-          item['Despesas'],
-          item['Data Pagto Despesas'],
-          item['Nota Fiscal'],
-          item['Honorários'],
-          item['Data Pagto Honorários'],
-          item['Status'],
-          item['Observações']
-        ])
-      ];
-      
-      // Criar worksheet com os dados
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      
-      // Mesclar células do título (A1 até L1)
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }
-      ];
-      
-      // Definir larguras das colunas
-      const colWidths = [
-        { wch: 12 }, // Data
-        { wch: 15 }, // Veículo
-        { wch: 10 }, // Placa
-        { wch: 20 }, // Chassi
-        { wch: 12 }, // Sinistro
-        { wch: 15 }, // Despesas
-        { wch: 18 }, // Data Pagto Despesas
-        { wch: 12 }, // Nota Fiscal
-        { wch: 15 }, // Honorários
-        { wch: 20 }, // Data Pagto Honorários
-        { wch: 12 }, // Status
-        { wch: 30 }  // Observações
-      ];
-      ws['!cols'] = colWidths;
-      
-      // Adicionar worksheet ao workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'Relatórios Financeiros');
-      
-      // Gerar nome do arquivo com data atual
-      const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-      const nomeArquivo = `Relatorios_Financeiros_${dataAtual}.xlsx`;
-      
-      // Salvar arquivo
-      XLSX.writeFile(wb, nomeArquivo);
-      
-      setSuccess(`Relatório exportado com sucesso: ${nomeArquivo}`);
-    } catch (error) {
-      console.error('Erro ao exportar para Excel:', error);
-      setError('Erro ao exportar relatório para Excel');
+    const result = exportToExcel(dadosExportacao, 'Relatorios_Financeiros');
+
+    if (result.success) {
+      setSuccess('Relatório financeiro exportado com sucesso.');
+    } else {
+      setError('Erro ao exportar relatório para Excel.');
     }
   };
 

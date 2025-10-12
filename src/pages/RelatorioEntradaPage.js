@@ -20,8 +20,8 @@ import {
   Search as SearchIcon,
   FileDownload as DownloadIcon
 } from '@mui/icons-material';
-import * as XLSX from 'xlsx';
 import entradaService from '../services/entradaService';
+import { exportToExcel } from '../utils/excelExporter';
 
 const RelatorioEntradaPage = () => {
   const [loading, setLoading] = useState(false);
@@ -82,48 +82,36 @@ const RelatorioEntradaPage = () => {
 
   // Função para exportar para Excel
   const exportarParaExcel = () => {
-    try {
-      const dadosExportacao = entradas.map(e => ({
-        'Id Entrada': e.id,
-        'Dt Entrada': formatarData(e.dt_entrada),
-        'Marca': e.marca || '-',
-        'Veículo': e.veiculo || '-',
-        'Placa': e.placa || '-',
-        'Chassi': e.chassi || '-',
-        'Ano Veículo': e.ano_veiculo || '-',
-        'Cód Sinistro': e.cod_sinistro || '-',
-        'Núm BO': e.num_bo || '-',
-        'UF Sinistro': e.uf_sinistro || '-',
-        'Cidade Sinistro': e.cidade_sinistro || '-',
-        'Seguradora': e.seguradora || '-',
-        'Colaborador': e.colaborador || '-',
-        'Posição': e.posicao || '-',
-        'Situação': e.situacao || '-',
-        'UF': e.uf || '-',
-        'Cidade': e.cidade || '-',
-        'Data Registro': formatarData(e.data_registro),
-        'Data Alteração': formatarData(e.updated_at),
-        'Tipo': e.tipo || '-',
-        'Núm Processo': e.numero_processo || '-'
-      }));
+    const dadosExportacao = entradas.map(e => ({
+      'Id Entrada': e.id,
+      'Dt Entrada': formatarData(e.dt_entrada),
+      'Marca': e.marca || '-',
+      'Veículo': e.veiculo || '-',
+      'Placa': e.placa || '-',
+      'Chassi': e.chassi || '-',
+      'Ano Veículo': e.ano_veiculo || '-',
+      'Cód Sinistro': e.cod_sinistro || '-',
+      'Núm BO': e.num_bo || '-',
+      'UF Sinistro': e.uf_sinistro || '-',
+      'Cidade Sinistro': e.cidade_sinistro || '-',
+      'Seguradora': e.seguradora || '-',
+      'Colaborador': e.colaborador || '-',
+      'Posição': e.posicao || '-',
+      'Situação': e.situacao || '-',
+      'UF': e.uf || '-',
+      'Cidade': e.cidade || '-',
+      'Data Registro': formatarData(e.data_registro),
+      'Data Alteração': formatarData(e.updated_at),
+      'Tipo': e.tipo || '-',
+      'Núm Processo': e.numero_processo || '-'
+    }));
 
-      const ws = XLSX.utils.json_to_sheet(dadosExportacao);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Registros de Entrada');
+    const result = exportToExcel(dadosExportacao, 'Relatorio_Entradas');
 
-      // Ajuste automático da largura das colunas
-      const colWidths = Object.keys(dadosExportacao[0] || {}).map(key => ({
-        wch: Math.max(key.length, 25) // Define uma largura mínima ou o tamanho do cabeçalho
-      }));
-      ws['!cols'] = colWidths;
-
-      const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-      XLSX.writeFile(wb, `Relatorio_Entradas_${dataAtual}.xlsx`);
+    if (result.success) {
       setSuccess('Relatório Excel exportado com sucesso.');
-
-    } catch (error) {
-      console.error('Erro ao exportar para Excel:', error);
-      setError('Erro ao exportar relatório para Excel');
+    } else {
+      setError('Erro ao exportar relatório para Excel.');
     }
   };
 
@@ -217,9 +205,10 @@ const RelatorioEntradaPage = () => {
               <TableCell sx={{ fontWeight: 'bold' }}>Data Entrada</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Veículo</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Placa</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Chassi</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Nº BO</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Sinistro</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Situação</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Data Alteração</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -229,7 +218,7 @@ const RelatorioEntradaPage = () => {
                 <TableCell>{formatarData(entrada.dt_entrada)}</TableCell>
                 <TableCell>{entrada.veiculo || '-'}</TableCell>
                 <TableCell>{entrada.placa || '-'}</TableCell>
-                <TableCell>{entrada.chassi || '-'}</TableCell>
+                <TableCell>{entrada.num_bo || '-'}</TableCell>
                 <TableCell>{entrada.cod_sinistro || '-'}</TableCell>
                 <TableCell>
                   <Chip 
@@ -237,6 +226,7 @@ const RelatorioEntradaPage = () => {
                     size="small"
                   />
                 </TableCell>
+                <TableCell>{formatarData(entrada.updated_at)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
