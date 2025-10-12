@@ -30,6 +30,7 @@ class EntradaResource extends JsonResource
                 ];
             }),
             'data_entrada' => $this->DATA_ENTRADA?->format('Y-m-d'),
+            'dt_entrada' => $this->DATA_ENTRADA?->format('Y-m-d'), // Alias para compatibilidade frontend
             'marca' => $this->MARCA,
             'veiculo' => $this->VEICULO,
             'placa' => $this->PLACA,
@@ -41,6 +42,7 @@ class EntradaResource extends JsonResource
             'numero_processo' => $this->NUMERO_PROCESSO,
             'cod_sinistro' => $this->COD_SINISTRO,
             'numero_bo' => $this->NUM_BO,
+            'num_bo' => $this->NUM_BO, // Alias para compatibilidade frontend
             'uf_sinistro' => $this->UF_SINISTRO,
             'cidade_sinistro' => $this->CIDADE_SINISTRO,
             'seguradora' => $this->SEGURADORA,
@@ -52,6 +54,7 @@ class EntradaResource extends JsonResource
             'tipo' => $this->TIPO,
             'data_registro' => $this->DATA_REGISTRO,
             'data_alteracao' => $this->DATA_ALTERACAO,
+            'updated_at' => $this->updated_at, // Alias para compatibilidade frontend
             // Novos campos
             'cor' => $this->COR,
             'renavam' => $this->RENAVAM,
