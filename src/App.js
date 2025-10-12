@@ -16,6 +16,7 @@ import JudicialPage from './pages/JudicialPage';
 import PrestadoresPage from './pages/PrestadoresPage';
 import RelatoriosPage from './pages/RelatoriosPage';
 import RelatoriosFinanceiroPage from './pages/RelatoriosFinanceiroPage';
+import RelatorioEntradaPage from './pages/RelatorioEntradaPage';
 import UsuariosPage from './pages/UsuariosPage';
 import ColaboradoresPage from './pages/ColaboradoresPage';
 import PosicoesPage from './pages/PosicoesPage';
@@ -159,6 +160,14 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <RelatoriosFinanceiroPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard/relatorios/entradas" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <RelatorioEntradaPage />
               </DashboardLayout>
             </ProtectedRoute>
           } />

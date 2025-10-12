@@ -53,6 +53,12 @@ const relatoriosSubItems = [
     icon: <FinanceiroIcon />,
     path: '/dashboard/relatorios/financeiro',
     permission: 'relatorios'
+  },
+  {
+    text: 'Entradas',
+    icon: <AssignmentIcon />,
+    path: '/dashboard/relatorios/entradas',
+    permission: 'relatorios'
   }
 ];
 
