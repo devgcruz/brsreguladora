@@ -249,7 +249,7 @@ const ObservacoesFeed = ({ entradaId }) => {
                   >
                     {observacao.usuario?.profile_photo_url ? 
                       null : 
-                      getInitials(observacao.usuario?.nome || 'U')
+                      getInitials(observacao.usuario?.name || 'U')
                     }
                   </Avatar>
 
@@ -272,7 +272,7 @@ const ObservacoesFeed = ({ entradaId }) => {
                             fontSize: { xs: '0.8rem', sm: '0.875rem' }
                           }}
                         >
-                          {observacao.usuario?.nome || 'Usuário'}
+                          {observacao.usuario?.name || 'Usuário'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
