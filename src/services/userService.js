@@ -155,7 +155,7 @@ class UserService {
   async updateUser(id, userData) {
     try {
       const response = await makeAuthenticatedRequest(`/usuarios/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(userData)
       });
       
