@@ -74,32 +74,32 @@ const gerenciarSubItems = [
     text: 'Colaboradores',
     icon: <ColaboradorIcon />,
     path: '/colaboradores',
-    permission: 'colaboradores'
+    permission: 'usuarios' // Usando 'usuarios' pois 'colaboradores' não está nas permissões validadas
   },
   {
     text: 'Posições',
     icon: <WorkIcon />,
     path: '/posicoes',
-    permission: 'posicoes'
+    permission: 'usuarios' // Usando 'usuarios' pois 'posicoes' não está nas permissões validadas
   },
   {
     text: 'Marcas',
     icon: <CarIcon />,
     path: '/marcas',
-    permission: 'marcas'
+    permission: 'usuarios' // Usando 'usuarios' pois 'marcas' não está nas permissões validadas
   },
   {
     text: 'Seguradoras',
     icon: <SecurityIcon />,
     path: '/seguradoras',
-    permission: 'seguradoras'
+    permission: 'usuarios' // Usando 'usuarios' pois 'seguradoras' não está nas permissões validadas
   }
 ];
 
 const Sidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasPermission } = useAuthStore();
   const [gerenciarExpanded, setGerenciarExpanded] = useState(false);
   const [relatoriosExpanded, setRelatoriosExpanded] = useState(false);
 
@@ -120,17 +120,6 @@ const Sidebar = ({ open, onClose }) => {
     setRelatoriosExpanded(!relatoriosExpanded);
   };
 
-  const hasPermission = (permission) => {
-    if (!user) return false;
-    
-    // Se for administrador, dar acesso total
-    if (user.nivel >= 3) {
-      return true;
-    }
-    
-    // Verificar permissões específicas
-    return user.permissoes && user.permissoes.includes(permission);
-  };
 
   const isGerenciarPath = (path) => {
     return gerenciarSubItems.some(item => item.path === path);
@@ -190,126 +179,140 @@ const Sidebar = ({ open, onClose }) => {
       <List>
         {/* Itens principais do menu */}
         {mainMenuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: 'transparent',
-                  color: 'black',
-                  fontWeight: 'bold',
+          hasPermission(item.permission) && (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                selected={location.pathname === item.path}
+                onClick={() => handleNavigation(item.path)}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'transparent',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'black',
+                    },
+                  },
                   '&:hover': {
                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   },
-                  '& .MuiListItemIcon-root': {
-                    color: 'black',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                },
-              }}
-            >
-              <ListItemIcon>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+                }}
+              >
+                <ListItemIcon>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          )
         ))}
 
         {/* Seção Relatórios */}
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleRelatoriosToggle}>
-            <ListItemIcon>
-              <RelatoriosIcon />
-            </ListItemIcon>
-            <ListItemText primary="Relatórios" />
-            {relatoriosExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </ListItemButton>
-        </ListItem>
-        
-        <Collapse in={relatoriosExpanded} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {relatoriosSubItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  selected={location.pathname === item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  sx={{
-                    pl: 4, // Indentação para sub-itens
-                    '&.Mui-selected': {
-                      backgroundColor: 'transparent',
-                      color: 'black',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      },
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Collapse>
+        {hasPermission('relatorios') && (
+          <>
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleRelatoriosToggle}>
+                <ListItemIcon>
+                  <RelatoriosIcon />
+                </ListItemIcon>
+                <ListItemText primary="Relatórios" />
+                {relatoriosExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
+            
+            <Collapse in={relatoriosExpanded} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {relatoriosSubItems.map((item) => (
+                  hasPermission(item.permission) && (
+                    <ListItem key={item.text} disablePadding>
+                      <ListItemButton
+                        selected={location.pathname === item.path}
+                        onClick={() => handleNavigation(item.path)}
+                        sx={{
+                          pl: 4, // Indentação para sub-itens
+                          '&.Mui-selected': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            },
+                            '& .MuiListItemIcon-root': {
+                              color: 'black',
+                            },
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 40 }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={item.text} />
+                      </ListItemButton>
+                    </ListItem>
+                  )
+                ))}
+              </List>
+            </Collapse>
+          </>
+        )}
 
-        {/* Seção Gerenciar */}
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleGerenciarToggle}>
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Gerenciar" />
-            {gerenciarExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </ListItemButton>
-        </ListItem>
-        
-        <Collapse in={gerenciarExpanded} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {gerenciarSubItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  selected={location.pathname === item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  sx={{
-                    pl: 4, // Indentação para sub-itens
-                    '&.Mui-selected': {
-                      backgroundColor: 'transparent',
-                      color: 'black',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'black',
-                      },
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Collapse>
+        {/* Seção Gerenciar - Mostrar se usuário tem permissão de usuários */}
+        {hasPermission('usuarios') && (
+          <>
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleGerenciarToggle}>
+                <ListItemIcon>
+                  <SettingsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Gerenciar" />
+                {gerenciarExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
+            
+            <Collapse in={gerenciarExpanded} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {gerenciarSubItems.map((item) => (
+                  hasPermission(item.permission) && (
+                    <ListItem key={item.text} disablePadding>
+                      <ListItemButton
+                        selected={location.pathname === item.path}
+                        onClick={() => handleNavigation(item.path)}
+                        sx={{
+                          pl: 4, // Indentação para sub-itens
+                          '&.Mui-selected': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            },
+                            '& .MuiListItemIcon-root': {
+                              color: 'black',
+                            },
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 40 }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText primary={item.text} />
+                      </ListItemButton>
+                    </ListItem>
+                  )
+                ))}
+              </List>
+            </Collapse>
+          </>
+        )}
       </List>
       
     </Drawer>

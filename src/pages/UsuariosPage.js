@@ -63,7 +63,6 @@ const UsuariosPage = () => {
     Usuario: '',
     email: '',
     Senha: '',
-    nivel: 1,
     cargo: '',
     permissoes: [],
     roles: [],
@@ -82,12 +81,8 @@ const UsuariosPage = () => {
   const permissoesDisponiveis = [
     { key: 'dashboard', label: 'Dashboard' },
     { key: 'registros', label: 'Registros' },
-    { key: 'financeiro', label: 'Financeiro' },
-    { key: 'judicial', label: 'Judicial' },
-    { key: 'prestadores', label: 'Prestadores' },
     { key: 'relatorios', label: 'Relatórios' },
-    { key: 'usuarios', label: 'Usuários' },
-    { key: 'auditoria', label: 'Auditoria' }
+    { key: 'usuarios', label: 'Usuários' }
   ];
 
   // Carregar usuários da API
@@ -162,7 +157,6 @@ const UsuariosPage = () => {
       Usuario: '',
       email: '',
       Senha: '',
-      nivel: 1,
       cargo: '',
       permissoes: [],
       roles: [],
@@ -179,7 +173,6 @@ const UsuariosPage = () => {
       Usuario: usuario.Usuario || '',
       email: usuario.email || '',
       Senha: '', // Sempre limpar senha na edição
-      nivel: usuario.nivel || 1,
       cargo: usuario.cargo || '',
       permissoes: usuario.permissoes || [],
       roles: usuario.roles || [],
@@ -509,7 +502,6 @@ const UsuariosPage = () => {
                   <TableRow>
                     <TableCell>Usuário</TableCell>
                     <TableCell>Cargo</TableCell>
-                    <TableCell>Nível</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>Último Acesso</TableCell>
                     <TableCell>Permissões</TableCell>
@@ -542,13 +534,6 @@ const UsuariosPage = () => {
                         <Typography variant="body2">
                           {usuario.cargo || 'Não informado'}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={`Nível ${usuario.nivel}`}
-                          color={usuario.nivel >= 3 ? 'warning' : 'default'}
-                          size="small"
-                        />
                       </TableCell>
                       <TableCell>
                         <Chip 
@@ -703,17 +688,6 @@ const UsuariosPage = () => {
                 label="Cargo"
                 value={formData.cargo}
                 onChange={(e) => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Nível"
-                type="number"
-                value={formData.nivel}
-                onChange={(e) => setFormData(prev => ({ ...prev, nivel: parseInt(e.target.value) || 1 }))}
-                inputProps={{ min: 1, max: 5 }}
-                helperText="1-Operador, 2-Analista, 3-Administrador"
               />
             </Grid>
             <Grid item xs={12} sm={6}>

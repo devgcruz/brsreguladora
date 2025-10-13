@@ -34,9 +34,6 @@ class UsuarioController extends Controller
             $query->where('status', $request->get('status'));
         }
 
-        if ($request->has('nivel')) {
-            $query->where('nivel', $request->get('nivel'));
-        }
 
         $usuarios = $query->orderBy('nome')->paginate(15);
 
@@ -75,6 +72,9 @@ class UsuarioController extends Controller
         // Fazer hash da senha antes de criar o usuário
         $data['Senha'] = Hash::make($data['Senha']);
         
+        // Garantir que permissões seja um array vazio se não for enviado
+        $data['permissoes'] = $request->input('permissoes', []);
+        
         $usuario = Usuario::create($data);
 
         // Atribuir roles se fornecidos
@@ -103,6 +103,9 @@ class UsuarioController extends Controller
             // Se a senha não foi fornecida ou está vazia, remover do array para manter a senha atual
             unset($data['Senha']);
         }
+        
+        // Garantir que permissões seja um array vazio se não for enviado
+        $data['permissoes'] = $request->input('permissoes', []);
         
         $usuario->update($data);
 
@@ -187,10 +190,10 @@ class UsuarioController extends Controller
             'total' => Usuario::count(),
             'ativos' => Usuario::where('status', 'ativo')->count(),
             'inativos' => Usuario::where('status', 'inativo')->count(),
-            'administradores' => Usuario::where('nivel', '>=', 3)->count(),
-            'por_nivel' => Usuario::selectRaw('nivel, COUNT(*) as total')
-                ->groupBy('nivel')
-                ->get()
+            // Ajustado para contar usuários com o perfil 'Administrador'
+            'administradores' => Usuario::whereHas('roles', function ($query) {
+                $query->where('name', 'Administrador');
+            })->count(),
         ];
 
         return response()->json([

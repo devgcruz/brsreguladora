@@ -108,7 +108,7 @@ const useAuthStore = create((set, get) => ({
     if (!user) return false;
     
     // Se for administrador, dar acesso total
-    if (user.nivel >= 3) {
+    if (user.roles && user.roles.includes('Administrador')) {
       return true;
     }
     
@@ -119,7 +119,7 @@ const useAuthStore = create((set, get) => ({
   // Verifica se usuário é administrador
   isAdmin: () => {
     const { user } = get();
-    return user && user.nivel >= 3;
+    return user && user.roles && user.roles.includes('Administrador');
   },
 
   // Login

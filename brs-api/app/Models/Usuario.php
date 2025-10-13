@@ -21,7 +21,6 @@ class Usuario extends Authenticatable
         'nome',
         'Usuario',
         'Senha',
-        'nivel',
         'email',
         'cargo',
         'permissoes',
@@ -76,7 +75,8 @@ class Usuario extends Authenticatable
      */
     public function isAdmin()
     {
-        return $this->nivel >= 3;
+        // Verificar se o usuário tem o role 'Administrador'
+        return $this->hasRole('Administrador');
     }
 
     /**

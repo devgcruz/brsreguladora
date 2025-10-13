@@ -68,7 +68,7 @@ class UserService {
     if (!this.currentUser) return false;
     
     // Se for administrador, dar acesso total
-    if (this.currentUser.nivel >= 3) {
+    if (this.isAdmin()) {
       return true;
     }
     
@@ -78,7 +78,10 @@ class UserService {
 
   // Verificar se usuário é administrador
   isAdmin() {
-    return this.currentUser && this.currentUser.nivel >= 3;
+    if (!this.currentUser) return false;
+    
+    // Verificar se o usuário tem o role 'Administrador'
+    return this.currentUser.roles && this.currentUser.roles.includes('Administrador');
   }
 
   // Obter todos os usuários

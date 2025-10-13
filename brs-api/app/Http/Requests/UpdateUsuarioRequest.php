@@ -37,7 +37,6 @@ class UpdateUsuarioRequest extends FormRequest
                 Rule::unique('usuarios', 'email')->ignore($this->route('usuario'), 'id')
             ],
             'Senha' => 'sometimes|string|min:6',
-            'nivel' => 'sometimes|integer|min:1|max:5',
             'cargo' => 'sometimes|string|max:100',
             'permissoes' => 'nullable|array',
             'permissoes.*' => 'string|in:dashboard,registros,financeiro,judicial,prestadores,relatorios,usuarios,auditoria',
@@ -65,9 +64,6 @@ class UpdateUsuarioRequest extends FormRequest
             'email.unique' => 'Este email já está cadastrado no sistema.',
             'Senha.string' => 'O campo senha deve ser uma string.',
             'Senha.min' => 'O campo senha deve ter pelo menos 6 caracteres.',
-            'nivel.integer' => 'O campo nível deve ser um número inteiro.',
-            'nivel.min' => 'O campo nível deve ser pelo menos 1.',
-            'nivel.max' => 'O campo nível não pode ser maior que 5.',
             'cargo.string' => 'O campo cargo deve ser uma string.',
             'cargo.max' => 'O campo cargo não pode ter mais de 100 caracteres.',
             'permissoes.array' => 'O campo permissões deve ser um array.',
