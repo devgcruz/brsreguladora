@@ -38,6 +38,7 @@ const GenericAutocomplete = ({
           {...params}
           label={label}
           variant="outlined"
+          size="small"
           error={error}
           helperText={helperText}
           InputProps={{

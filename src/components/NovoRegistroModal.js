@@ -20,6 +20,7 @@ import {
 import BlurredDialog from './BlurredDialog';
 import OptimizedSelect from './OptimizedSelect';
 import GenericAutocomplete from './GenericAutocomplete';
+import UfCidadeDropdown from './UfCidadeDropdown';
 import {
   Close as CloseIcon,
   Save as SaveIcon,
@@ -58,22 +59,11 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     setActiveTab(newValue);
   };
   
-  // Hook otimizado para dropdowns
+  // Hook otimizado para dropdowns (apenas colaboradores agora)
   const {
-    ufOptions,
-    cidadeSinistroOptions,
-    cidadeLocalizacaoOptions,
     colaboradorOptions,
-    loadingUfs,
-    loadingCidadesSinistro,
-    loadingCidadesLocalizacao,
-    loadingColaboradores,
-    initialized,
-    loadUfs,
+    loading: loadingColaboradores,
     loadColaboradores,
-    loadCidadesSinistro,
-    loadCidadesLocalizacao,
-    initializeDropdownValues,
     clearCache
   } = useOptimizedDropdowns();
 
@@ -91,18 +81,17 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
   // Carregar dados dos dropdowns quando o modal for aberto
   useEffect(() => {
     if (open) {
-      // Carrega UFs e Colaboradores em paralelo
-      Promise.all([
-        loadUfs(),
-        loadColaboradores()
-      ]).then(() => {
-        console.log('[NovoRegistroModal] Dados dos dropdowns carregados com sucesso');
-      }).catch((error) => {
-        console.error('[NovoRegistroModal] Erro ao carregar dados dos dropdowns:', error);
-        setError('Erro ao carregar dados dos dropdowns');
-      });
+      // Carrega Colaboradores
+      loadColaboradores()
+        .then(() => {
+          console.log('[NovoRegistroModal] Dados dos dropdowns carregados com sucesso');
+        })
+        .catch((error) => {
+          console.error('[NovoRegistroModal] Erro ao carregar dados dos dropdowns:', error);
+          setError('Erro ao carregar dados dos dropdowns');
+        });
     }
-  }, [open, loadUfs, loadColaboradores]);
+  }, [open, loadColaboradores]);
 
   const [formData, setFormData] = useState({
     protocolo: '',
@@ -144,36 +133,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
 
   // Opções estáticas (mantendo apenas as que não foram migradas para dados dinâmicos)
 
-  // Handlers otimizados para mudança de UF
-  const handleUfSinistroChange = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      ufSinistro: value,
-      cidadeSinistro: ''
-    }));
-    
-    if (value) {
-      const ufSelecionada = ufOptions.find(uf => uf.value === value);
-      if (ufSelecionada) {
-        loadCidadesSinistro(ufSelecionada.value);
-      }
-    }
-  }, [ufOptions, loadCidadesSinistro]);
-
-  const handleUfLocalizacaoChange = useCallback((value) => {
-    setFormData(prev => ({
-      ...prev,
-      uf: value,
-      cidade: ''
-    }));
-    
-    if (value) {
-      const ufSelecionada = ufOptions.find(uf => uf.value === value);
-      if (ufSelecionada) {
-        loadCidadesLocalizacao(ufSelecionada.value);
-      }
-    }
-  }, [ufOptions, loadCidadesLocalizacao]);
+  // Handlers removidos - agora gerenciados pelos componentes UfCidadeDropdown
 
   // Controlar estado de prontidão do formulário
   useEffect(() => {
@@ -197,18 +157,11 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
       ? eventOrValue.target.value
       : eventOrValue;
 
-    // Usar handlers específicos para UFs
-    if (field === 'ufSinistro') {
-      handleUfSinistroChange(value);
-    } else if (field === 'uf') {
-      handleUfLocalizacaoChange(value);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
-  }, [handleUfSinistroChange, handleUfLocalizacaoChange]);
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
 
   // Função para validar formato da placa
   const validatePlacaFormat = useCallback((placa) => {
@@ -497,7 +450,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     return (
       <Box sx={{ width: '100%', mt: { xs: 1, sm: 2, md: 3 } }}>
         <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }}>
-          {/* Seção 1: Dados Básicos */}
+          {/* Seção 1: Dados Básicos do Veículo */}
           <Grid item xs={12}>
             <Typography 
               variant="subtitle2" 
@@ -513,21 +466,21 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             </Typography>
           </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  label="Protocolo"
-                  placeholder="Será gerado automaticamente (ID do registro)"
-                  value={formData.protocolo}
-                  onChange={handleInputChange('protocolo')}
-                  variant="outlined"
-                  size="small"
-                  disabled
-                  sx={fieldSx}
-                />
-              </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
+              label="Protocolo"
+              placeholder="Será gerado automaticamente (ID do registro)"
+              value={formData.protocolo}
+              onChange={handleInputChange('protocolo')}
+              variant="outlined"
+              size="small"
+              disabled
+              sx={fieldSx}
+            />
+          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Data de Entrada"
@@ -542,7 +495,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="marca"
               label="Marca"
@@ -553,7 +506,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Veículo"
@@ -566,7 +519,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Placa"
@@ -592,7 +545,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Chassi"
@@ -604,7 +557,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Cor"
@@ -617,33 +570,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="RENAVAM"
-              value={formData.renavam}
-              onChange={handleInputChange('renavam')}
-              variant="outlined"
-              size="small"
-              autoComplete="off"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Número do Motor"
-              value={formData.numeroMotor}
-              onChange={handleInputChange('numeroMotor')}
-              variant="outlined"
-              size="small"
-              autoComplete="off"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Ano do Veículo"
@@ -658,7 +585,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Ano do Modelo"
@@ -690,7 +617,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="seguradora"
               label="Seguradora"
@@ -701,7 +628,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Código do Sinistro"
@@ -713,7 +640,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Número B.O."
@@ -725,68 +652,20 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Autocomplete
-              options={ufOptions || []}
-              getOptionLabel={(option) => option.label || ''}
-              value={ufOptions.find(u => u.value === formData.ufSinistro) || null}
-              onChange={(event, newValue) => {
-                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
-                handleUfSinistroChange(simulatedEvent);
-              }}
-              loading={loadingUfs}
-              renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="UF do Sinistro"
-                  sx={fieldSx}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingUfs ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              noOptionsText="Nenhuma UF disponível"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Autocomplete
-              options={cidadeSinistroOptions || []}
-              getOptionLabel={(option) => option.label || ''}
-              value={cidadeSinistroOptions.find(c => c.value === formData.cidadeSinistro) || null}
-              onChange={(event, newValue) => {
-                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
-                handleInputChange('cidadeSinistro')(simulatedEvent);
-              }}
-              loading={loadingCidadesSinistro}
-              disabled={!formData.ufSinistro}
-              renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="Cidade do Sinistro"
-                  sx={fieldSx}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingCidadesSinistro ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              noOptionsText={!formData.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              sx={fieldSx}
-            />
-          </Grid>
+          {/* Dropdown de UF e Cidade do Sinistro */}
+          <UfCidadeDropdown
+            valueUf={formData.ufSinistro}
+            valueCidade={formData.cidadeSinistro}
+            onChangeUf={(value) => {
+              setFormData(prev => ({ ...prev, ufSinistro: value, cidadeSinistro: '' }));
+            }}
+            onChangeCidade={(value) => {
+              setFormData(prev => ({ ...prev, cidadeSinistro: value }));
+            }}
+            labelUf="UF do Sinistro"
+            labelCidade="Cidade do Sinistro"
+            gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+          />
 
           {/* Seção 3: Atribuição e Localização */}
           <Grid item xs={12}>
@@ -805,7 +684,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="colaborador"
               label="Colaborador"
@@ -816,7 +695,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="posicao"
               label="Posição"
@@ -827,70 +706,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Autocomplete
-              options={ufOptions || []}
-              getOptionLabel={(option) => option.label || ''}
-              value={ufOptions.find(u => u.value === formData.uf) || null}
-              onChange={(event, newValue) => {
-                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
-                handleUfLocalizacaoChange(simulatedEvent);
-              }}
-              loading={loadingUfs}
-              renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="UF (Localização)"
-                  sx={fieldSx}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingUfs ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              noOptionsText="Nenhuma UF disponível"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Autocomplete
-              options={cidadeLocalizacaoOptions || []}
-              getOptionLabel={(option) => option.label || ''}
-              value={cidadeLocalizacaoOptions.find(c => c.value === formData.cidade) || null}
-              onChange={(event, newValue) => {
-                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
-                handleInputChange('cidade')(simulatedEvent);
-              }}
-              loading={loadingCidadesLocalizacao}
-              disabled={!formData.uf}
-              renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="Cidade (Localização)"
-                  sx={fieldSx}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingCidadesLocalizacao ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              noOptionsText={!formData.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Número do Processo"
@@ -902,7 +718,22 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          {/* Dropdown de UF e Cidade de Localização */}
+          <UfCidadeDropdown
+            valueUf={formData.uf}
+            valueCidade={formData.cidade}
+            onChangeUf={(value) => {
+              setFormData(prev => ({ ...prev, uf: value, cidade: '' }));
+            }}
+            onChangeCidade={(value) => {
+              setFormData(prev => ({ ...prev, cidade: value }));
+            }}
+            labelUf="UF (Localização)"
+            labelCidade="Cidade (Localização)"
+            gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+          />
+
+          <Grid item xs={12} sm={6} md={4}>
             <Autocomplete
               options={tipos.filter(tipo => tipo)}
               value={formData.tipo || ""}
@@ -910,13 +741,37 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 const simulatedEvent = { target: { value: newValue || '' } };
                 handleInputChange('tipo')(simulatedEvent);
               }}
+              size="small"
               renderInput={(params) => (
                 <TextField 
                   {...params} 
                   label="Tipo"
+                  size="small"
                   sx={fieldSx}
                 />
               )}
+              sx={fieldSx}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <Autocomplete
+              options={['Pendente', 'Em Andamento', 'Finalizado']}
+              value={formData.situacao || 'Pendente'}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue || 'Pendente' } };
+                handleInputChange('situacao')(simulatedEvent);
+              }}
+              size="small"
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Situação"
+                  size="small"
+                  sx={fieldSx}
+                />
+              )}
+              disableClearable
               sx={fieldSx}
             />
           </Grid>
@@ -940,7 +795,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 </Typography>
               </Grid>
               
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Comarca"
@@ -952,7 +807,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="N° Processo"
@@ -964,7 +819,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Nota Fiscal"
@@ -976,7 +831,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="N° Vara"
@@ -988,7 +843,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="DT Pagto"
@@ -1002,7 +857,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Honorário"
@@ -1014,7 +869,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Nome Banco"

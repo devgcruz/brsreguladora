@@ -5,25 +5,42 @@
  * - Dropdown de cidades filtradas por UF
  * - Fechamento automático ao clicar fora
  * - Sem necessidade de tecla ESC
+ * - Sincronização com valores externos (controlado)
+ * 
+ * @param {string} externalUf - Valor externo da UF (opcional, para modo controlado)
+ * @param {string} externalCidade - Valor externo da Cidade (opcional, para modo controlado)
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import ufCidadeService from '../services/ufCidadeService';
 
-export const useUfCidadeDropdowns = () => {
+export const useUfCidadeDropdowns = (externalUf = '', externalCidade = '') => {
   // Estados para UF
-  const [ufSelecionada, setUfSelecionada] = useState('');
+  const [ufSelecionada, setUfSelecionada] = useState(externalUf);
   const [ufOptions, setUfOptions] = useState([]);
   const [loadingUf, setLoadingUf] = useState(false);
 
   // Estados para cidades
-  const [cidadeSelecionada, setCidadeSelecionada] = useState('');
+  const [cidadeSelecionada, setCidadeSelecionada] = useState(externalCidade);
   const [cidadeOptions, setCidadeOptions] = useState([]);
   const [loadingCidade, setLoadingCidade] = useState(false);
 
   // Estados para busca
   const [buscaCidade, setBuscaCidade] = useState('');
   const [cidadesFiltradas, setCidadesFiltradas] = useState([]);
+
+  // Sincronizar com valores externos (quando o componente pai atualiza)
+  useEffect(() => {
+    if (externalUf !== ufSelecionada) {
+      setUfSelecionada(externalUf);
+    }
+  }, [externalUf]);
+
+  useEffect(() => {
+    if (externalCidade !== cidadeSelecionada) {
+      setCidadeSelecionada(externalCidade);
+    }
+  }, [externalCidade]);
 
   // Carregar estados na inicialização
   useEffect(() => {
@@ -37,7 +54,7 @@ export const useUfCidadeDropdowns = () => {
     } else {
       setCidadeOptions([]);
       setCidadesFiltradas([]);
-      setCidadeSelecionada('');
+      // Não limpar cidadeSelecionada aqui para evitar limpar o valor externo
     }
   }, [ufSelecionada]);
 

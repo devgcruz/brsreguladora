@@ -374,7 +374,7 @@ const RegistrosPage = () => {
                   primary={
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {obs.usuario || obs.nome || 'Usuário'}
+                        {obs.usuario?.nome || obs.nome || 'Usuário'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {formatarDataObservacao(obs.data || obs.data_criacao || obs.created_at)}

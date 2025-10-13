@@ -21,6 +21,7 @@ import {
 import BlurredDialog from './BlurredDialog';
 import GuardedSelect from './GuardedSelect'; // NOVO COMPONENTE ULTRA-SEGURO
 import GenericAutocomplete from './GenericAutocomplete';
+import UfCidadeDropdown from './UfCidadeDropdown';
 import {
   Close as CloseIcon,
   Save as SaveIcon,
@@ -59,16 +60,11 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     setActiveTab(newValue);
   };
   
-  // Hook otimizado para dropdowns com estado centralizado
+  // Hook otimizado para dropdowns (apenas colaboradores agora)
   const {
     loading: dropdownsLoading,
-    dropdownValues,
-    handleDropdownChange,
-    initializeDropdownValues,
-    ufOptions,
-    cidadeSinistroOptions,
-    cidadeLocalizacaoOptions,
-    colaboradorOptions
+    colaboradorOptions,
+    loadColaboradores
   } = useOptimizedDropdowns();
 
   // Hook para dados dinâmicos dos selects
@@ -116,13 +112,31 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     return value;
   };
 
+  // Estado para valores dos dropdowns de UF/Cidade
+  const [dropdownValues, setDropdownValues] = useState({
+    ufSinistro: '',
+    cidadeSinistro: '',
+    uf: '',
+    cidade: '',
+    colaborador: ''
+  });
+
   // SOLUÇÃO ARQUITETURAL DEFINITIVA: ESTADO CENTRALIZADO
   useEffect(() => {
     if (open && registroData) {
-      // O hook agora cuida de todo o carregamento e preenchimento dos selects
-      initializeDropdownValues(registroData);
+      // Carregar colaboradores
+      loadColaboradores();
 
-      // O modal só se preocupa com os campos de texto
+      // Preencher valores dos dropdowns de UF/Cidade
+      setDropdownValues({
+        ufSinistro: String(registroData.uf_sinistro || ''),
+        cidadeSinistro: String(registroData.cidade_sinistro || ''),
+        uf: String(registroData.uf || ''),
+        cidade: String(registroData.cidade || ''),
+        colaborador: registroData.colaborador?.nome || registroData.colaborador?.NOME || ''
+      });
+
+      // O modal cuida dos campos de texto
       setTextFieldsData({
         protocolo: String(registroData.id || ''),
         entrada: registroData.data_entrada || '',
@@ -155,8 +169,15 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       // Observações são carregadas automaticamente na aba dedicada
     } else if (!open) {
       setTextFieldsData(initialState); // Limpa ao fechar
+      setDropdownValues({
+        ufSinistro: '',
+        cidadeSinistro: '',
+        uf: '',
+        cidade: '',
+        colaborador: ''
+      });
     }
-  }, [open, registroData, initializeDropdownValues]);
+  }, [open, registroData, loadColaboradores]);
 
 
   // Função para validar formato da placa
@@ -186,10 +207,10 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     }
   }, [validatePlacaFormat]);
 
-  // Handler para os DROPDOWNS vindo do hook
-  const handleSelectChange = useCallback((field) => (event) => {
-    handleDropdownChange(field, event.target.value);
-  }, [handleDropdownChange]);
+  // Handler para os DROPDOWNS
+  const handleDropdownChange = useCallback((field, value) => {
+    setDropdownValues(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   // Funções de observações removidas - agora gerenciadas via ObservacoesFeed
 
@@ -376,7 +397,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     return (
       <Box sx={{ width: '100%', mt: { xs: 1, sm: 2, md: 3 } }}>
         <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }}>
-          {/* Seção 1: Dados Básicos */}
+          {/* Seção 1: Dados Básicos do Veículo */}
           <Grid item xs={12}>
             <Typography 
               variant="subtitle2" 
@@ -392,7 +413,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Protocolo"
@@ -406,7 +427,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Data de Entrada"
@@ -421,7 +442,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="marca"
               label="Marca"
@@ -432,7 +453,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Veículo"
@@ -445,7 +466,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Placa"
@@ -463,7 +484,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Chassi"
@@ -475,7 +496,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Cor"
@@ -488,33 +509,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="RENAVAM"
-              value={textFieldsData.renavam}
-              onChange={handleTextFieldChange('renavam')}
-              variant="outlined"
-              size="small"
-              autoComplete="off"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Número do Motor"
-              value={textFieldsData.numeroMotor}
-              onChange={handleTextFieldChange('numeroMotor')}
-              variant="outlined"
-              size="small"
-              autoComplete="off"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Ano do Veículo"
@@ -529,7 +524,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Ano do Modelo"
@@ -561,7 +556,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="seguradora"
               label="Seguradora"
@@ -572,7 +567,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Código do Sinistro"
@@ -584,7 +579,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Número B.O."
@@ -596,32 +591,16 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
-              label="UF do Sinistro"
-              value={dropdownValues.ufSinistro || ""}
-              onChange={handleSelectChange('ufSinistro')}
-              options={ufOptions || []}
-              loading={dropdownsLoading}
-              loadingMessage="Carregando UFs..."
-              emptyMessage="Nenhuma UF disponível"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
-              label="Cidade do Sinistro"
-              value={dropdownValues.cidadeSinistro || ""}
-              onChange={handleSelectChange('cidadeSinistro')}
-              options={cidadeSinistroOptions || []}
-              loading={dropdownsLoading}
-              disabled={!dropdownValues.ufSinistro}
-              loadingMessage="Carregando cidades..."
-              emptyMessage={!dropdownValues.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              sx={fieldSx}
-            />
-          </Grid>
+          {/* Dropdown de UF e Cidade do Sinistro */}
+          <UfCidadeDropdown
+            valueUf={dropdownValues.ufSinistro}
+            valueCidade={dropdownValues.cidadeSinistro}
+            onChangeUf={(value) => handleDropdownChange('ufSinistro', value)}
+            onChangeCidade={(value) => handleDropdownChange('cidadeSinistro', value)}
+            labelUf="UF do Sinistro"
+            labelCidade="Cidade do Sinistro"
+            gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+          />
 
           {/* Seção 3: Atribuição e Localização */}
           <Grid item xs={12}>
@@ -640,18 +619,18 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="colaborador"
               label="Colaborador"
               value={dropdownValues.colaborador || ""}
-              onChange={handleSelectChange('colaborador')}
+              onChange={(value) => handleDropdownChange('colaborador', value)}
               options={colaboradoresDinamicos}
               loading={loadingDropdowns}
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <GenericAutocomplete
               name="posicao"
               label="Posição"
@@ -662,34 +641,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
-              label="UF (Localização)"
-              value={dropdownValues.uf || ""}
-              onChange={handleSelectChange('uf')}
-              options={ufOptions || []}
-              loading={dropdownsLoading}
-              loadingMessage="Carregando UFs..."
-              emptyMessage="Nenhuma UF disponível"
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
-              label="Cidade (Localização)"
-              value={dropdownValues.cidade || ""}
-              onChange={handleSelectChange('cidade')}
-              options={cidadeLocalizacaoOptions || []}
-              loading={dropdownsLoading}
-              disabled={!dropdownValues.uf}
-              loadingMessage="Carregando cidades..."
-              emptyMessage={!dropdownValues.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              sx={fieldSx}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Número do Processo"
@@ -701,7 +653,18 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          {/* Dropdown de UF e Cidade de Localização */}
+          <UfCidadeDropdown
+            valueUf={dropdownValues.uf}
+            valueCidade={dropdownValues.cidade}
+            onChangeUf={(value) => handleDropdownChange('uf', value)}
+            onChangeCidade={(value) => handleDropdownChange('cidade', value)}
+            labelUf="UF (Localização)"
+            labelCidade="Cidade (Localização)"
+            gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+          />
+
+          <Grid item xs={12} sm={6} md={4}>
             <Autocomplete
               options={tipos.filter(opt => opt.value)}
               getOptionLabel={(option) => option.label || option}
@@ -710,10 +673,12 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
                 handleTextFieldChange('tipo')(simulatedEvent);
               }}
+              size="small"
               renderInput={(params) => (
                 <TextField 
                   {...params} 
                   label="Tipo"
+                  size="small"
                   sx={fieldSx}
                 />
               )}
@@ -721,19 +686,20 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <Autocomplete
               options={['Pendente', 'Em Andamento', 'Finalizado']}
               value={textFieldsData.situacao || 'Pendente'}
               onChange={(event, newValue) => {
-                // Simula o evento do handleChange para manter a compatibilidade
                 const simulatedEvent = { target: { value: newValue || 'Pendente' } };
                 handleTextFieldChange('situacao')(simulatedEvent);
               }}
+              size="small"
               renderInput={(params) => (
                 <TextField 
                   {...params} 
                   label="Situação"
+                  size="small"
                   sx={fieldSx}
                 />
               )}
@@ -761,7 +727,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 </Typography>
               </Grid>
               
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Comarca"
@@ -773,7 +739,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="N° Processo"
@@ -785,7 +751,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Nota Fiscal"
@@ -797,7 +763,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="N° Vara"
@@ -809,7 +775,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="DT Pagto"
@@ -823,7 +789,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Honorário"
@@ -835,7 +801,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
                   label="Nome Banco"
