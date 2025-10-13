@@ -98,12 +98,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // UFs e Cidades removidos - agora usando dados fixos (JSON) e cache local
 
+    // Rota de estatísticas de usuários (com middleware de permissão)
+    Route::get('/usuarios/statistics', [UsuarioController::class, 'statistics'])->middleware(\App\Http\Middleware\PermissionMiddleware::class . ':usuarios');
+
     // Usuários (apenas administradores)
     Route::middleware([\App\Http\Middleware\PermissionMiddleware::class . ':usuarios'])->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
         Route::patch('/usuarios/{usuario}/toggle-status', [UsuarioController::class, 'toggleStatus']);
         Route::post('/usuarios/{usuario}/change-password', [UsuarioController::class, 'changePassword']);
-        Route::get('/usuarios/statistics', [UsuarioController::class, 'statistics']);
     });
 
 });
