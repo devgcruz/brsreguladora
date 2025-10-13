@@ -16,6 +16,7 @@ import {
   Skeleton,
   Tabs,
   Tab,
+  Autocomplete,
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
 import GuardedSelect from './GuardedSelect'; // NOVO COMPONENTE ULTRA-SEGURO
@@ -713,6 +714,27 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               value={textFieldsData.tipo || ""}
               onChange={handleTextFieldChange('tipo')}
               options={tipos}
+              sx={fieldSx}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Autocomplete
+              options={['Pendente', 'Em Andamento', 'Finalizado']}
+              value={textFieldsData.situacao || 'Pendente'}
+              onChange={(event, newValue) => {
+                // Simula o evento do handleChange para manter a compatibilidade
+                const simulatedEvent = { target: { value: newValue || 'Pendente' } };
+                handleTextFieldChange('situacao')(simulatedEvent);
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Situação"
+                  sx={fieldSx}
+                />
+              )}
+              disableClearable
               sx={fieldSx}
             />
           </Grid>

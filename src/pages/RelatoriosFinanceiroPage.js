@@ -41,6 +41,7 @@ import * as XLSX from 'xlsx';
 import financeiroService from '../services/financeiroService';
 import entradaService from '../services/entradaService';
 import { exportToExcel } from '../utils/excelExporter';
+import StatCard from '../components/StatCard';
 
 const RelatoriosFinanceiroPage = () => {
   const [loading, setLoading] = useState(false);
@@ -189,49 +190,49 @@ const RelatoriosFinanceiroPage = () => {
 
   // Função para exportar para Excel
   const exportarParaExcel = () => {
-    // Preparar dados para exportação
-    const dadosExportacao = [];
-    
-    relatorios.forEach((relatorio) => {
-      const { entrada, financeiros } = relatorio;
+      // Preparar dados para exportação
+      const dadosExportacao = [];
       
-      if (financeiros.length === 0) {
-        // Se não há lançamentos financeiros, adicionar apenas a entrada com campos vazios
-        dadosExportacao.push({
-          'Data': formatarData(entrada.data_registro),
-          'Veículo': entrada.veiculo || '-',
-          'Placa': entrada.placa || '-',
-          'Chassi': entrada.chassi || '-',
-          'Sinistro': entrada.cod_sinistro || '-',
-          'Despesas': '-',
-          'Data Pagto Despesas': '-',
-          'Nota Fiscal': '-',
-          'Honorários': '-',
-          'Data Pagto Honorários': '-',
-          'Status': '-',
-          'Observações': '-'
-        });
-      } else {
-        // Para cada lançamento financeiro, criar uma linha separada
-        // SEMPRE repetindo os dados do veículo (Data, Veículo, Placa, Chassi, Sinistro)
-        financeiros.forEach((financeiro) => {
+      relatorios.forEach((relatorio) => {
+        const { entrada, financeiros } = relatorio;
+        
+        if (financeiros.length === 0) {
+          // Se não há lançamentos financeiros, adicionar apenas a entrada com campos vazios
           dadosExportacao.push({
             'Data': formatarData(entrada.data_registro),
             'Veículo': entrada.veiculo || '-',
             'Placa': entrada.placa || '-',
             'Chassi': entrada.chassi || '-',
             'Sinistro': entrada.cod_sinistro || '-',
-            'Despesas': formatarMoeda(financeiro.valor_total_recibo),
-            'Data Pagto Despesas': formatarData(financeiro.data_pagamento_recibo),
-            'Nota Fiscal': financeiro.numero_nota_fiscal || '-',
-            'Honorários': formatarMoeda(financeiro.valor_nota_fiscal),
-            'Data Pagto Honorários': formatarData(financeiro.data_pagamento_nota_fiscal),
-            'Status': financeiro.status_pagamento || 'Pendente',
-            'Observações': financeiro.observacao || financeiro.OBSERVACOES || '-'
+            'Despesas': '-',
+            'Data Pagto Despesas': '-',
+            'Nota Fiscal': '-',
+            'Honorários': '-',
+            'Data Pagto Honorários': '-',
+            'Status': '-',
+            'Observações': '-'
           });
-        });
-      }
-    });
+        } else {
+          // Para cada lançamento financeiro, criar uma linha separada
+          // SEMPRE repetindo os dados do veículo (Data, Veículo, Placa, Chassi, Sinistro)
+          financeiros.forEach((financeiro) => {
+            dadosExportacao.push({
+              'Data': formatarData(entrada.data_registro),
+              'Veículo': entrada.veiculo || '-',
+              'Placa': entrada.placa || '-',
+              'Chassi': entrada.chassi || '-',
+              'Sinistro': entrada.cod_sinistro || '-',
+              'Despesas': formatarMoeda(financeiro.valor_total_recibo),
+              'Data Pagto Despesas': formatarData(financeiro.data_pagamento_recibo),
+              'Nota Fiscal': financeiro.numero_nota_fiscal || '-',
+              'Honorários': formatarMoeda(financeiro.valor_nota_fiscal),
+              'Data Pagto Honorários': formatarData(financeiro.data_pagamento_nota_fiscal),
+              'Status': financeiro.status_pagamento || 'Pendente',
+              'Observações': financeiro.observacao || financeiro.OBSERVACOES || '-'
+            });
+          });
+        }
+      });
 
     const result = exportToExcel(dadosExportacao, 'Relatorios_Financeiros');
 
@@ -347,57 +348,30 @@ const RelatoriosFinanceiroPage = () => {
       {relatorios.length > 0 && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom variant="body2">
-                      Registros de Entrada
-                    </Typography>
-                    <Typography variant="h4" component="div">
-                      {calcularEstatisticas().totalRegistros}
-                    </Typography>
-                  </Box>
-                  <AssignmentIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard
+              icon={<AssignmentIcon />}
+              title="Registros de Entrada"
+              value={calcularEstatisticas().totalRegistros}
+              color="primary.main"
+            />
           </Grid>
           
           <Grid item xs={12} sm={4}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom variant="body2">
-                      Total Recibos
-                    </Typography>
-                    <Typography variant="h4" component="div">
-                      {formatarMoeda(calcularEstatisticas().totalRecibos)}
-                    </Typography>
-                  </Box>
-                  <ReceiptIcon sx={{ fontSize: 40, color: 'success.main' }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard
+              icon={<ReceiptIcon />}
+              title="Total Recibos"
+              value={formatarMoeda(calcularEstatisticas().totalRecibos)}
+              color="success.main"
+            />
           </Grid>
           
           <Grid item xs={12} sm={4}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom variant="body2">
-                      Total Notas Fiscais
-                    </Typography>
-                    <Typography variant="h4" component="div">
-                      {formatarMoeda(calcularEstatisticas().totalNotasFiscais)}
-                    </Typography>
-                  </Box>
-                  <AssessmentIcon sx={{ fontSize: 40, color: 'warning.main' }} />
-                </Box>
-              </CardContent>
-            </Card>
+            <StatCard
+              icon={<AssessmentIcon />}
+              title="Total Notas Fiscais"
+              value={formatarMoeda(calcularEstatisticas().totalNotasFiscais)}
+              color="warning.main"
+            />
           </Grid>
         </Grid>
       )}

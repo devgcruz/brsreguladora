@@ -24,6 +24,7 @@ import NovoRegistroModal from '../components/NovoRegistroModal';
 import EditarRegistroModal from '../components/EditarRegistroModal';
 import PaginationControls from '../components/PaginationControls';
 import AccessibleFab from '../components/AccessibleFab';
+import ConfirmationDialog from '../components/ConfirmationDialog';
 
 const RegistrosPage = () => {
   const [entradas, setEntradas] = useState([]);
@@ -39,6 +40,10 @@ const RegistrosPage = () => {
     message: '',
     severity: 'success'
   });
+  
+  // Estados para confirmação de edição
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [selectedEntrada, setSelectedEntrada] = useState(null);
   
   // Estados de paginação
   const [pagination, setPagination] = useState({
@@ -83,7 +88,8 @@ const RegistrosPage = () => {
       String(entrada.veiculo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       String(entrada.marca || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       String(entrada.seguradora || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.posicao || '').toLowerCase().includes(searchTerm.toLowerCase())
+      String(entrada.posicao || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(entrada.situacao || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredEntradas(filtered);
   };
@@ -126,8 +132,21 @@ const RegistrosPage = () => {
   };
 
   const handleEditClick = (registro) => {
-    setSelectedRegistro(registro);
-    setEditModalOpen(true);
+    if (registro.situacao === 'Finalizado') {
+      setSelectedEntrada(registro);
+      setConfirmationOpen(true);
+    } else {
+      setSelectedRegistro(registro);
+      setEditModalOpen(true);
+    }
+  };
+
+  const handleConfirmEdit = () => {
+    setConfirmationOpen(false);
+    if (selectedEntrada) {
+      setSelectedRegistro(selectedEntrada);
+      setEditModalOpen(true);
+    }
   };
 
   const handleEditModalClose = () => {
@@ -229,6 +248,19 @@ const RegistrosPage = () => {
         return 'error';
       
       // Padrão
+      default:
+        return 'default';
+    }
+  };
+
+  const getSituacaoChipColor = (situacao) => {
+    switch (situacao) {
+      case 'Finalizado':
+        return 'success';
+      case 'Em Andamento':
+        return 'warning';
+      case 'Pendente':
+        return 'info';
       default:
         return 'default';
     }
@@ -381,7 +413,7 @@ const RegistrosPage = () => {
       <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
         <TextField
           fullWidth
-          placeholder="Buscar por placa, veículo, marca, seguradora ou posição..."
+          placeholder="Buscar por placa, veículo, marca, seguradora, posição ou situação..."
           value={searchTerm}
           onChange={handleSearchChange}
           InputProps={{
@@ -410,6 +442,7 @@ const RegistrosPage = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
+                backgroundColor: entrada.situacao === 'Finalizado' ? '#e8f5e9' : 'inherit',
                 '&:hover': {
                   transform: 'translateY(-4px)',
                   boxShadow: 4,
@@ -441,10 +474,13 @@ const RegistrosPage = () => {
                   Colaborador: {entrada.colaborador?.nome || entrada.colaborador?.NOME || 'N/A'}
                 </Typography>
                 
-                <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Situação:
+                  </Typography>
                   <Chip
-                    label={String(entrada.posicao || '')}
-                    color={getPosicaoColor(entrada.posicao)}
+                    label={entrada.situacao || 'Pendente'}
+                    color={getSituacaoChipColor(entrada.situacao)}
                     size="small"
                   />
                 </Box>
@@ -620,6 +656,15 @@ const RegistrosPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Diálogo de confirmação para editar registros finalizados */}
+      <ConfirmationDialog
+        open={confirmationOpen}
+        onClose={() => setConfirmationOpen(false)}
+        onConfirm={handleConfirmEdit}
+        title="Confirmar Alteração"
+        message="Esse processo já foi finalizado. Certeza que deseja alterar?"
+      />
     </Box>
   );
 };

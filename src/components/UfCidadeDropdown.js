@@ -9,19 +9,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   TextField,
   Box,
   CircularProgress,
   Typography,
   Chip,
-  InputAdornment
+  Autocomplete,
+  Grid
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   LocationOn as LocationIcon,
   Public as PublicIcon
 } from '@mui/icons-material';
@@ -58,11 +54,6 @@ const UfCidadeDropdown = ({
     getUfSelecionada
   } = useUfCidadeDropdowns();
 
-  const [openUf, setOpenUf] = useState(false);
-  const [openCidade, setOpenCidade] = useState(false);
-  const ufRef = useRef(null);
-  const cidadeRef = useRef(null);
-
   // Sincronizar com props externas
   useEffect(() => {
     if (valueUf !== ufSelecionada) {
@@ -76,50 +67,19 @@ const UfCidadeDropdown = ({
     }
   }, [valueCidade, cidadeSelecionada, handleCidadeChange]);
 
-  // Fechar dropdowns ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (ufRef.current && !ufRef.current.contains(event.target)) {
-        setOpenUf(false);
-      }
-      if (cidadeRef.current && !cidadeRef.current.contains(event.target)) {
-        setOpenCidade(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleUfSelect = (event) => {
-    const value = event.target.value;
+  const handleUfSelect = (event, newValue) => {
+    const value = newValue ? newValue.value : '';
     handleUfChange(value);
-    setOpenUf(false);
     if (onChangeUf) {
       onChangeUf(value);
     }
   };
 
-  const handleCidadeSelect = (event) => {
-    const value = event.target.value;
+  const handleCidadeSelect = (event, newValue) => {
+    const value = newValue ? newValue.value : '';
     handleCidadeChange(value);
-    setOpenCidade(false);
     if (onChangeCidade) {
       onChangeCidade(value);
-    }
-  };
-
-  const handleUfOpen = () => {
-    if (!disabled) {
-      setOpenUf(true);
-    }
-  };
-
-  const handleCidadeOpen = () => {
-    if (!disabled && ufSelecionada) {
-      setOpenCidade(true);
     }
   };
 
@@ -127,166 +87,88 @@ const UfCidadeDropdown = ({
   const cidadeSelecionadaData = getCidadeSelecionada();
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, ...sx }}>
-      {/* Dropdown UF */}
-      <Box ref={ufRef} sx={{ flex: 1 }}>
-        <FormControl fullWidth variant="outlined" required={required}>
-          <InputLabel id="uf-label">{labelUf}</InputLabel>
-          <Select
-            labelId="uf-label"
-            value={ufSelecionada}
-            onChange={handleUfSelect}
-            onOpen={handleUfOpen}
-            onClose={() => setOpenUf(false)}
-            open={openUf}
-            disabled={disabled || loadingUf}
-            label={labelUf}
-            startAdornment={
-              <InputAdornment position="start">
-                <PublicIcon color="action" />
-              </InputAdornment>
-            }
-            renderValue={(value) => {
-              if (!value) return placeholderUf;
-              const uf = ufOptions.find(u => u.value === value);
-              return uf ? `${uf.nome} (${uf.sigla})` : value;
-            }}
-          >
-            {loadingUf ? (
-              <MenuItem disabled>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                  <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando estados...</Typography>
+    <>
+      <Grid item xs={12} md={6}>
+        <Autocomplete
+          options={ufOptions}
+          getOptionLabel={(option) => option.sigla ? `${option.nome} (${option.sigla})` : ''}
+          value={ufOptions.find(u => u.value === ufSelecionada) || null}
+          onChange={handleUfSelect}
+          loading={loadingUf}
+          disabled={disabled || loadingUf}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={labelUf}
+              variant="outlined"
+              required={required}
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {loadingUf ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
+          )}
+          renderOption={(props, option) => (
+            <li {...props}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PublicIcon color="action" fontSize="small" />
+                <Box>
+                  <Typography variant="body2">{option.nome}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.sigla} • {option.regiao}
+                  </Typography>
                 </Box>
-              </MenuItem>
-            ) : (
-              ufOptions.map((uf) => (
-                <MenuItem key={uf.id} value={uf.value}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <LocationIcon color="action" />
-                    <Box>
-                      <Typography variant="body1">{uf.nome}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {uf.sigla} • {uf.regiao}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
-      </Box>
-
-      {/* Dropdown Cidade */}
-      <Box ref={cidadeRef} sx={{ flex: 1 }}>
-        <FormControl fullWidth variant="outlined" required={required}>
-          <InputLabel id="cidade-label">{labelCidade}</InputLabel>
-          <Select
-            labelId="cidade-label"
-            value={cidadeSelecionada}
-            onChange={handleCidadeSelect}
-            onOpen={handleCidadeOpen}
-            onClose={() => setOpenCidade(false)}
-            open={openCidade}
-            disabled={disabled || loadingCidade || !ufSelecionada}
-            label={labelCidade}
-            startAdornment={
-              <InputAdornment position="start">
-                <LocationIcon color="action" />
-              </InputAdornment>
-            }
-            renderValue={(value) => {
-              if (!value) {
-                if (!ufSelecionada) return 'Selecione primeiro um estado';
-                return placeholderCidade;
-              }
-              const cidade = cidadeOptions.find(c => c.value === value);
-              return cidade ? cidade.nome : value;
-            }}
-          >
-            {!ufSelecionada ? (
-              <MenuItem disabled>
-                <Typography variant="body2" color="text.secondary">
-                  Selecione primeiro um estado
-                </Typography>
-              </MenuItem>
-            ) : loadingCidade ? (
-              <MenuItem disabled>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                  <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando cidades...</Typography>
-                </Box>
-              </MenuItem>
-            ) : cidadeOptions.length === 0 ? (
-              <MenuItem disabled>
-                <Typography variant="body2" color="text.secondary">
-                  Nenhuma cidade encontrada para este estado
-                </Typography>
-              </MenuItem>
-            ) : (
-              cidadeOptions.map((cidade) => (
-                <MenuItem key={cidade.id} value={cidade.value}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <LocationIcon color="action" />
-                    <Typography variant="body1">{cidade.nome}</Typography>
-                  </Box>
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
-      </Box>
-
-      {/* Campo de busca de cidade (opcional) */}
-      {showSearch && ufSelecionada && (
-        <Box sx={{ flex: 1 }}>
-          <TextField
-            fullWidth
-            label="Buscar cidade"
-            value={buscaCidade}
-            onChange={(e) => handleBuscaCidade(e.target.value)}
-            placeholder="Digite o nome da cidade..."
-            variant="outlined"
-            disabled={disabled || !ufSelecionada}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              )
-            }}
-          />
-        </Box>
-      )}
-
-      {/* Informações da seleção atual */}
-      {(ufSelecionadaData || cidadeSelecionadaData) && (
-        <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            Seleção atual:
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-            {ufSelecionadaData && (
-              <Chip
-                label={`${ufSelecionadaData.nome} (${ufSelecionadaData.sigla})`}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
-            )}
-            {cidadeSelecionadaData && (
-              <Chip
-                label={cidadeSelecionadaData.nome}
-                size="small"
-                color="secondary"
-                variant="outlined"
-              />
-            )}
-          </Box>
-        </Box>
-      )}
-    </Box>
+              </Box>
+            </li>
+          )}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          noOptionsText="Nenhum estado encontrado"
+        />
+      </Grid>
+      
+      <Grid item xs={12} md={6}>
+        <Autocomplete
+          options={cidadeOptions}
+          getOptionLabel={(option) => option.nome || ''}
+          value={cidadeOptions.find(c => c.value === cidadeSelecionada) || null}
+          onChange={handleCidadeSelect}
+          loading={loadingCidade}
+          disabled={disabled || loadingCidade || !ufSelecionada}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={labelCidade}
+              variant="outlined"
+              required={required}
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {loadingCidade ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
+          )}
+          renderOption={(props, option) => (
+            <li {...props}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LocationIcon color="action" fontSize="small" />
+                <Typography variant="body2">{option.nome}</Typography>
+              </Box>
+            </li>
+          )}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          noOptionsText={!ufSelecionada ? "Selecione um estado primeiro" : "Nenhuma cidade encontrada"}
+        />
+      </Grid>
+    </>
   );
 };
 

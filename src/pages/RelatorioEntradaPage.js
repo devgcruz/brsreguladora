@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -18,10 +18,15 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  FileDownload as DownloadIcon
+  FileDownload as DownloadIcon,
+  ListAlt as ListAltIcon,
+  HourglassEmpty as HourglassEmptyIcon,
+  Sync as SyncIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon
 } from '@mui/icons-material';
 import entradaService from '../services/entradaService';
 import { exportToExcel } from '../utils/excelExporter';
+import StatCard from '../components/StatCard';
 
 const RelatorioEntradaPage = () => {
   const [loading, setLoading] = useState(false);
@@ -34,6 +39,16 @@ const RelatorioEntradaPage = () => {
     dataInicio: '',
     dataFim: ''
   });
+
+  // Calcular estatísticas
+  const stats = useMemo(() => {
+    const total = entradas.length;
+    const pendentes = entradas.filter(e => e.situacao === 'Pendente').length;
+    const emAndamento = entradas.filter(e => e.situacao === 'Em Andamento').length;
+    const finalizados = entradas.filter(e => e.situacao === 'Finalizado').length;
+
+    return { total, pendentes, emAndamento, finalizados };
+  }, [entradas]);
 
   // Função para buscar relatórios
   const buscarRelatorios = async () => {
@@ -182,6 +197,44 @@ const RelatorioEntradaPage = () => {
           </Grid>
         </Grid>
       </Paper>
+
+      {/* Cards de Estatísticas */}
+      {entradas.length > 0 && (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<ListAltIcon />}
+              title="Total de Registros"
+              value={stats.total}
+              color="primary.main"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<HourglassEmptyIcon />}
+              title="Pendentes"
+              value={stats.pendentes}
+              color="info.main"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<SyncIcon />}
+              title="Em Andamento"
+              value={stats.emAndamento}
+              color="warning.main"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<CheckCircleOutlineIcon />}
+              title="Finalizados"
+              value={stats.finalizados}
+              color="success.main"
+            />
+          </Grid>
+        </Grid>
+      )}
 
       {/* Alertas */}
       {error && (
