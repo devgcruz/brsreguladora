@@ -26,11 +26,13 @@ class ObservacaoResource extends JsonResource
                 
                 return [
                     'id' => $this->usuario->id,
-                    'nome' => $this->usuario->nome,
+                    'name' => $this->usuario->nome, // Mapear 'nome' para 'name' para consistência com frontend
                     'profile_photo_path' => $photoPath,
                     'profile_photo_url' => $photoUrl
                 ];
-            })
+            }),
+            // Fallback para dados antigos que não possuem relação usuario
+            'nome' => $this->whenLoaded('usuario') ? $this->usuario->nome : ($this->responsavel ?? $this->usuario_nome ?? null)
         ];
     }
 }

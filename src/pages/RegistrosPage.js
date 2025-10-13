@@ -361,20 +361,29 @@ const RegistrosPage = () => {
       );
     }
 
+    // Adicione esta linha para depuração
+    console.log('Dados das observações recebidas:', observacoes);
+
     return (
       <Paper sx={{ p: 2, maxWidth: 400, maxHeight: 300, overflow: 'auto' }}>
         <Typography variant="h6" gutterBottom>
           Observações ({observacoes.length})
         </Typography>
         <List dense>
-          {observacoes.map((obs, index) => (
+          {observacoes.map((obs, index) => {
+            // Adicione esta linha para ver cada objeto
+            if (!obs.usuario && !obs.nome) {
+              console.log('Observação sem nome de usuário:', obs);
+            }
+            
+            return (
             <React.Fragment key={index}>
               <ListItem sx={{ px: 0 }}>
                 <ListItemText
                   primary={
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {obs.usuario?.nome || obs.nome || 'Usuário'}
+                        {obs.usuario?.name || obs.nome || 'Usuário'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {formatarDataObservacao(obs.data || obs.data_criacao || obs.created_at)}
@@ -390,7 +399,8 @@ const RegistrosPage = () => {
               </ListItem>
               {index < observacoes.length - 1 && <Divider />}
             </React.Fragment>
-          ))}
+            );
+          })}
         </List>
       </Paper>
     );
@@ -545,7 +555,7 @@ const RegistrosPage = () => {
                             {getUltimaObservacao(entrada).texto || getUltimaObservacao(entrada).observacao || getUltimaObservacao(entrada).descricao || 'Sem texto'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {formatarDataObservacao(getUltimaObservacao(entrada).data || getUltimaObservacao(entrada).data_criacao || getUltimaObservacao(entrada).created_at)}
+                            {`${getUltimaObservacao(entrada).usuario?.name || 'Usuário'} em `}{formatarDataObservacao(getUltimaObservacao(entrada).data || getUltimaObservacao(entrada).data_criacao || getUltimaObservacao(entrada).created_at)}
                           </Typography>
                         </Box>
                       </Box>
