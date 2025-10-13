@@ -103,8 +103,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Usuários (apenas administradores)
     Route::middleware([\App\Http\Middleware\PermissionMiddleware::class . ':usuarios'])->group(function () {
-        Route::apiResource('usuarios', UsuarioController::class);
+        // IMPORTANTE: Esta rota deve vir ANTES do apiResource para evitar conflitos
         Route::get('/usuarios/roles', [UsuarioController::class, 'getRoles']);
+        Route::apiResource('usuarios', UsuarioController::class);
         Route::patch('/usuarios/{usuario}/toggle-status', [UsuarioController::class, 'toggleStatus']);
         Route::post('/usuarios/{usuario}/change-password', [UsuarioController::class, 'changePassword']);
     });

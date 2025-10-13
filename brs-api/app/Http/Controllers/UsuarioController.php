@@ -9,6 +9,7 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
 {
@@ -204,7 +205,7 @@ class UsuarioController extends Controller
     public function getRoles(): JsonResponse
     {
         try {
-            $roles = \Spatie\Permission\Models\Role::all(['name', 'id']);
+            $roles = Role::all(['name', 'id']);
             
             return response()->json([
                 'success' => true,
