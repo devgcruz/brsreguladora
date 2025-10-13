@@ -726,30 +726,64 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              label="UF do Sinistro"
-              value={formData.ufSinistro || ""}
-              onChange={handleUfSinistroChange}
+            <Autocomplete
               options={ufOptions || []}
+              getOptionLabel={(option) => option.label || ''}
+              value={ufOptions.find(u => u.value === formData.ufSinistro) || null}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
+                handleUfSinistroChange(simulatedEvent);
+              }}
               loading={loadingUfs}
-              loadingMessage="Carregando UFs..."
-              emptyMessage="Nenhuma UF disponível"
-              searchable={ufOptions.length > 10}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="UF do Sinistro"
+                  sx={fieldSx}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingUfs ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              noOptionsText="Nenhuma UF disponível"
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              label="Cidade do Sinistro"
-              value={formData.cidadeSinistro || ""}
-              onChange={handleInputChange('cidadeSinistro')}
+            <Autocomplete
               options={cidadeSinistroOptions || []}
+              getOptionLabel={(option) => option.label || ''}
+              value={cidadeSinistroOptions.find(c => c.value === formData.cidadeSinistro) || null}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
+                handleInputChange('cidadeSinistro')(simulatedEvent);
+              }}
               loading={loadingCidadesSinistro}
               disabled={!formData.ufSinistro}
-              loadingMessage="Carregando cidades..."
-              emptyMessage={!formData.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              searchable={cidadeSinistroOptions.length > 10}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Cidade do Sinistro"
+                  sx={fieldSx}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingCidadesSinistro ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              noOptionsText={!formData.ufSinistro ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               sx={fieldSx}
             />
           </Grid>
@@ -794,30 +828,64 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              label="UF (Localização)"
-              value={formData.uf || ""}
-              onChange={handleUfLocalizacaoChange}
+            <Autocomplete
               options={ufOptions || []}
+              getOptionLabel={(option) => option.label || ''}
+              value={ufOptions.find(u => u.value === formData.uf) || null}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
+                handleUfLocalizacaoChange(simulatedEvent);
+              }}
               loading={loadingUfs}
-              loadingMessage="Carregando UFs..."
-              emptyMessage="Nenhuma UF disponível"
-              searchable={ufOptions.length > 10}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="UF (Localização)"
+                  sx={fieldSx}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingUfs ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              noOptionsText="Nenhuma UF disponível"
               sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              label="Cidade (Localização)"
-              value={formData.cidade || ""}
-              onChange={handleInputChange('cidade')}
+            <Autocomplete
               options={cidadeLocalizacaoOptions || []}
+              getOptionLabel={(option) => option.label || ''}
+              value={cidadeLocalizacaoOptions.find(c => c.value === formData.cidade) || null}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
+                handleInputChange('cidade')(simulatedEvent);
+              }}
               loading={loadingCidadesLocalizacao}
               disabled={!formData.uf}
-              loadingMessage="Carregando cidades..."
-              emptyMessage={!formData.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
-              searchable={cidadeLocalizacaoOptions.length > 10}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Cidade (Localização)"
+                  sx={fieldSx}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingCidadesLocalizacao ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              noOptionsText={!formData.uf ? "Selecione primeiro uma UF" : "Nenhuma cidade disponível"}
               sx={fieldSx}
             />
           </Grid>
