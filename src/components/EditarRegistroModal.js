@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
 import GuardedSelect from './GuardedSelect'; // NOVO COMPONENTE ULTRA-SEGURO
+import GenericAutocomplete from './GenericAutocomplete';
 import {
   Close as CloseIcon,
   Save as SaveIcon,
@@ -421,15 +422,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
+            <GenericAutocomplete
+              name="marca"
               label="Marca"
               value={textFieldsData.marca || ""}
               onChange={handleTextFieldChange('marca')}
-              options={marcas.map(marca => ({ value: marca.nome, label: marca.nome }))}
+              options={marcas}
               loading={loadingDropdowns}
-              loadingMessage="Carregando marcas..."
-              emptyMessage="Nenhuma marca encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -563,15 +562,13 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
+            <GenericAutocomplete
+              name="seguradora"
               label="Seguradora"
               value={textFieldsData.seguradora || ""}
               onChange={handleTextFieldChange('seguradora')}
-              options={seguradoras.map(seguradora => ({ value: seguradora.nome, label: seguradora.nome }))}
+              options={seguradoras}
               loading={loadingDropdowns}
-              loadingMessage="Carregando seguradoras..."
-              emptyMessage="Nenhuma seguradora encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -644,28 +641,24 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
+            <GenericAutocomplete
+              name="colaborador"
               label="Colaborador"
               value={dropdownValues.colaborador || ""}
               onChange={handleSelectChange('colaborador')}
-              options={colaboradoresDinamicos.map(colaborador => ({ value: colaborador.nome, label: colaborador.nome }))}
+              options={colaboradoresDinamicos}
               loading={loadingDropdowns}
-              loadingMessage="Carregando colaboradores..."
-              emptyMessage="Nenhum colaborador encontrado"
-              sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
+            <GenericAutocomplete
+              name="posicao"
               label="Posição"
               value={textFieldsData.posicao || ""}
               onChange={handleTextFieldChange('posicao')}
-              options={posicoes.map(posicao => ({ value: posicao.nome, label: posicao.nome }))}
+              options={posicoes}
               loading={loadingDropdowns}
-              loadingMessage="Carregando posições..."
-              emptyMessage="Nenhuma posição encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -709,11 +702,21 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <GuardedSelect
-              label="Tipo"
-              value={textFieldsData.tipo || ""}
-              onChange={handleTextFieldChange('tipo')}
-              options={tipos}
+            <Autocomplete
+              options={tipos.filter(opt => opt.value)}
+              getOptionLabel={(option) => option.label || option}
+              value={tipos.find(t => t.value === textFieldsData.tipo) || null}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue ? newValue.value : '' } };
+                handleTextFieldChange('tipo')(simulatedEvent);
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Tipo"
+                  sx={fieldSx}
+                />
+              )}
               sx={fieldSx}
             />
           </Grid>

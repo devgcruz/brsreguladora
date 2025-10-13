@@ -15,9 +15,11 @@ import {
   Skeleton,
   Tabs,
   Tab,
+  Autocomplete,
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
 import OptimizedSelect from './OptimizedSelect';
+import GenericAutocomplete from './GenericAutocomplete';
 import {
   Close as CloseIcon,
   Save as SaveIcon,
@@ -541,15 +543,13 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
+            <GenericAutocomplete
+              name="marca"
               label="Marca"
               value={formData.marca || ""}
               onChange={handleInputChange('marca')}
-              options={marcas.map(marca => ({ value: marca.nome, label: marca.nome }))}
+              options={marcas}
               loading={loadingDropdowns}
-              loadingMessage="Carregando marcas..."
-              emptyMessage="Nenhuma marca encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -691,15 +691,13 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
+            <GenericAutocomplete
+              name="seguradora"
               label="Seguradora"
               value={formData.seguradora || ""}
               onChange={handleInputChange('seguradora')}
-              options={seguradoras.map(seguradora => ({ value: seguradora.nome, label: seguradora.nome }))}
+              options={seguradoras}
               loading={loadingDropdowns}
-              loadingMessage="Carregando seguradoras..."
-              emptyMessage="Nenhuma seguradora encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -774,29 +772,24 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
+            <GenericAutocomplete
+              name="colaborador"
               label="Colaborador"
               value={formData.colaborador || ""}
               onChange={handleInputChange('colaborador')}
-              options={colaboradoresDinamicos.map(colaborador => ({ value: colaborador.nome, label: colaborador.nome }))}
+              options={colaboradoresDinamicos}
               loading={loadingDropdowns}
-              loadingMessage="Carregando colaboradores..."
-              emptyMessage="Nenhum colaborador encontrado"
-              searchable={colaboradoresDinamicos.length > 10}
-              sx={fieldSx}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
+            <GenericAutocomplete
+              name="posicao"
               label="Posição"
               value={formData.posicao || ""}
               onChange={handleInputChange('posicao')}
-              options={posicoes.map(posicao => ({ value: posicao.nome, label: posicao.nome }))}
+              options={posicoes}
               loading={loadingDropdowns}
-              loadingMessage="Carregando posições..."
-              emptyMessage="Nenhuma posição encontrada"
-              sx={fieldSx}
             />
           </Grid>
 
@@ -842,11 +835,20 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <OptimizedSelect
-              label="Tipo"
+            <Autocomplete
+              options={tipos.filter(tipo => tipo)}
               value={formData.tipo || ""}
-              onChange={handleInputChange('tipo')}
-              options={tipos.map(tipo => ({ value: tipo, label: tipo })).filter(opt => opt.value && opt.label)}
+              onChange={(event, newValue) => {
+                const simulatedEvent = { target: { value: newValue || '' } };
+                handleInputChange('tipo')(simulatedEvent);
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Tipo"
+                  sx={fieldSx}
+                />
+              )}
               sx={fieldSx}
             />
           </Grid>
