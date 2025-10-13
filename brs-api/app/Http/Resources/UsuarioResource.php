@@ -22,6 +22,7 @@ class UsuarioResource extends JsonResource
             'nivel' => $this->nivel,
             'cargo' => $this->cargo,
             'permissoes' => $this->permissoes,
+            'roles' => $this->roles->pluck('name'),
             'status' => $this->status,
             'ultimo_acesso' => $this->ultimo_acesso?->format('Y-m-d H:i:s'),
             'created_at' => $this->created_at,

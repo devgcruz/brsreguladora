@@ -76,6 +76,11 @@ class UsuarioController extends Controller
         
         $usuario = Usuario::create($data);
 
+        // Atribuir roles se fornecidos
+        if ($request->has('roles') && is_array($request->roles)) {
+            $usuario->syncRoles($request->roles);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Usuário criado com sucesso',
@@ -99,6 +104,11 @@ class UsuarioController extends Controller
         }
         
         $usuario->update($data);
+
+        // Atualizar roles se fornecidos
+        if ($request->has('roles') && is_array($request->roles)) {
+            $usuario->syncRoles($request->roles);
+        }
 
         return response()->json([
             'success' => true,
@@ -186,6 +196,27 @@ class UsuarioController extends Controller
             'success' => true,
             'data' => $stats
         ]);
+    }
+
+    /**
+     * Obter roles disponíveis
+     */
+    public function getRoles(): JsonResponse
+    {
+        try {
+            $roles = \Spatie\Permission\Models\Role::all(['name', 'id']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $roles
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao obter roles',
+                'data' => []
+            ]);
+        }
     }
 }
 

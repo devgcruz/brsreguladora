@@ -28,7 +28,13 @@ import {
   DialogContent,
   DialogActions,
   FormControlLabel,
-  Switch
+  Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -60,9 +66,11 @@ const UsuariosPage = () => {
     nivel: 1,
     cargo: '',
     permissoes: [],
+    roles: [],
     status: 'ativo'
   });
   const [formLoading, setFormLoading] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState([]);
   const [statistics, setStatistics] = useState({
     total: 0,
     ativos: 0,
@@ -118,11 +126,24 @@ const UsuariosPage = () => {
     }
   }, []);
 
+  // Carregar roles disponíveis
+  const carregarRoles = useCallback(async () => {
+    try {
+      const response = await userService.getRoles();
+      if (response.success) {
+        setAvailableRoles(response.data);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar roles:', err);
+    }
+  }, []);
+
   // Efeito para carregar dados iniciais
   useEffect(() => {
     carregarUsuarios();
     carregarEstatisticas();
-  }, [carregarUsuarios, carregarEstatisticas]);
+    carregarRoles();
+  }, [carregarUsuarios, carregarEstatisticas, carregarRoles]);
 
   // Efeito para filtrar usuários quando o termo de busca muda
   useEffect(() => {
@@ -144,6 +165,7 @@ const UsuariosPage = () => {
       nivel: 1,
       cargo: '',
       permissoes: [],
+      roles: [],
       status: 'ativo'
     });
     setModalAberto(true);
@@ -160,6 +182,7 @@ const UsuariosPage = () => {
       nivel: usuario.nivel || 1,
       cargo: usuario.cargo || '',
       permissoes: usuario.permissoes || [],
+      roles: usuario.roles || [],
       status: usuario.status || 'ativo'
     });
     setModalAberto(true);
@@ -314,6 +337,14 @@ const UsuariosPage = () => {
       permissoes: prev.permissoes.includes(permissao)
         ? prev.permissoes.filter(p => p !== permissao)
         : [...prev.permissoes, permissao]
+    }));
+  };
+
+  // Função para alterar roles
+  const handleRolesChange = (event) => {
+    setFormData(prev => ({
+      ...prev,
+      roles: event.target.value
     }));
   };
 
@@ -482,6 +513,7 @@ const UsuariosPage = () => {
                     <TableCell>Status</TableCell>
                     <TableCell>Último Acesso</TableCell>
                     <TableCell>Permissões</TableCell>
+                    <TableCell>Perfis</TableCell>
                     <TableCell align="center">Ações</TableCell>
                   </TableRow>
                 </TableHead>
@@ -548,6 +580,25 @@ const UsuariosPage = () => {
                           ) : (
                             <Typography variant="body2" color="text.secondary">
                               Nenhuma
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {usuario.roles && usuario.roles.length > 0 ? (
+                            usuario.roles.map((role) => (
+                              <Chip
+                                key={role}
+                                label={role}
+                                size="small"
+                                color="secondary"
+                                variant="filled"
+                              />
+                            ))
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Nenhum
                             </Typography>
                           )}
                         </Box>
@@ -678,6 +729,26 @@ const UsuariosPage = () => {
                 }
                 label="Usuário Ativo"
               />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Perfis (Roles)</InputLabel>
+                <Select
+                  multiple
+                  value={formData.roles}
+                  onChange={handleRolesChange}
+                  renderValue={(selected) => selected.join(', ')}
+                  label="Perfis (Roles)"
+                >
+                  {availableRoles.map((role) => (
+                    <MenuItem key={role.name} value={role.name}>
+                      <Checkbox checked={formData.roles.indexOf(role.name) > -1} />
+                      <ListItemText primary={role.name} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             
             <Grid item xs={12}>

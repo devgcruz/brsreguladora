@@ -41,6 +41,8 @@ class UpdateUsuarioRequest extends FormRequest
             'cargo' => 'sometimes|string|max:100',
             'permissoes' => 'nullable|array',
             'permissoes.*' => 'string|in:dashboard,registros,financeiro,judicial,prestadores,relatorios,usuarios,auditoria',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|exists:roles,name',
             'status' => 'nullable|string|in:ativo,inativo'
         ];
     }

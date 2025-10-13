@@ -30,6 +30,8 @@ class StoreUsuarioRequest extends FormRequest
             'cargo' => 'nullable|string|max:100',
             'permissoes' => 'nullable|array',
             'permissoes.*' => 'string|in:dashboard,registros,financeiro,judicial,prestadores,relatorios,usuarios,auditoria',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|exists:roles,name',
             'status' => 'nullable|string|in:ativo,inativo'
         ];
     }

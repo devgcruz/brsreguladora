@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Usuários (apenas administradores)
     Route::middleware([\App\Http\Middleware\PermissionMiddleware::class . ':usuarios'])->group(function () {
         Route::apiResource('usuarios', UsuarioController::class);
+        Route::get('/usuarios/roles', [UsuarioController::class, 'getRoles']);
         Route::patch('/usuarios/{usuario}/toggle-status', [UsuarioController::class, 'toggleStatus']);
         Route::post('/usuarios/{usuario}/change-password', [UsuarioController::class, 'changePassword']);
     });

@@ -231,6 +231,24 @@ class UserService {
     }
   }
 
+  // Obter roles disponíveis
+  async getRoles() {
+    try {
+      const response = await makeAuthenticatedRequest('/usuarios/roles');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Erro ao obter roles:', error);
+      return {
+        success: false,
+        message: error.message,
+        data: []
+      };
+    }
+  }
+
   // Obter usuário atual
   getCurrentUser() {
     return this.currentUser;
