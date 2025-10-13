@@ -128,6 +128,11 @@ const GenericCrudPage = ({
     setDeleteDialog({ open: true, item });
   };
 
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditingItem(null);
+  };
+
   const handleConfirmDelete = async () => {
     try {
       setLoading(true);
@@ -179,8 +184,7 @@ const GenericCrudPage = ({
             `${itemName} criado com sucesso!`,
           type: 'success'
         });
-        setModalOpen(false);
-        setEditingItem(null);
+        handleCloseModal();
         loadItems();
       } else {
         setAlert({
@@ -436,10 +440,7 @@ const GenericCrudPage = ({
       {/* Modal de edição/criação */}
       <GenericCrudModal
         open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditingItem(null);
-        }}
+        onClose={handleCloseModal}
         onSave={handleModalSave}
         item={editingItem}
         itemName={itemName}

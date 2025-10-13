@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../services/userService';
+import StatCard from '../components/StatCard';
 import {
   Box,
   Typography,
@@ -401,83 +402,39 @@ const UsuariosPage = () => {
       {/* Cards de Estatísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                  <PersonIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {statistics.total}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total de Usuários
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total de Usuários"
+            value={statistics.total}
+            icon={<PersonIcon />}
+            color="primary.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
-                  <VisibilityIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {statistics.ativos}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Usuários Ativos
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Usuários Ativos"
+            value={statistics.ativos}
+            icon={<VisibilityIcon />}
+            color="success.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: 'error.main', mr: 2 }}>
-                  <VisibilityOffIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {statistics.inativos}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Usuários Inativos
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Usuários Inativos"
+            value={statistics.inativos}
+            icon={<VisibilityOffIcon />}
+            color="error.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: 'warning.main', mr: 2 }}>
-                  <AdminIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {statistics.administradores}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Administradores
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Administradores"
+            value={statistics.administradores}
+            icon={<AdminIcon />}
+            color="warning.main"
+          />
         </Grid>
       </Grid>
 

@@ -28,7 +28,13 @@ class EntradaController extends Controller
         \Log::info('🔐 Usuário autenticado:', ['user_id' => $request->user()?->id, 'user_name' => $request->user()?->nome]);
         \Log::info('📡 Headers da requisição:', $request->headers->all());
         
-        $query = Entrada::with(['colaborador', 'financeiros', 'judicial', 'pdfs', 'observacoes']);
+        $query = Entrada::with([
+            'colaborador:id_prestador,nome', 
+            'financeiros', 
+            'judicial', 
+            'pdfs', 
+            'observacoes'
+        ]);
 
         // Filtros de busca
         if ($request->has('search')) {

@@ -23,6 +23,7 @@ import {
   DirectionsCar as DirectionsCarIcon,
   Schedule as ScheduleIcon
 } from '@mui/icons-material';
+import StatCard from '../components/StatCard';
 import {
   PieChart,
   Pie,
@@ -121,107 +122,39 @@ const DashboardPage = memo(() => {
       {/* Cards de Estatísticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card className="dashboard-card" sx={{ height: '100%' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                  <DirectionsCarIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {dashboardStats.totalVeiculos}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total de Veículos
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                icon={<TrendingUpIcon />} 
-                label="+12% este mês" 
-                color="success" 
-                size="small" 
-              />
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total de Veículos"
+            value={dashboardStats.totalVeiculos}
+            icon={<DirectionsCarIcon />}
+            color="primary.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card className="dashboard-card" sx={{ height: '100%' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ bgcolor: 'warning.main', mr: 2 }}>
-                  <ScheduleIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {dashboardStats.emAnalise}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Em Análise
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                icon={<TrendingDownIcon />} 
-                label="-5% esta semana" 
-                color="error" 
-                size="small" 
-              />
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Em Análise"
+            value={dashboardStats.emAnalise}
+            icon={<ScheduleIcon />}
+            color="warning.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card className="dashboard-card" sx={{ height: '100%' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
-                  <AssessmentIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {dashboardStats.finalizados}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Finalizados
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                icon={<TrendingUpIcon />} 
-                label="+8% este mês" 
-                color="success" 
-                size="small" 
-              />
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Finalizados"
+            value={dashboardStats.finalizados}
+            icon={<AssessmentIcon />}
+            color="success.main"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card className="dashboard-card" sx={{ height: '100%' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ bgcolor: 'info.main', mr: 2 }}>
-                  <AttachMoneyIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    R$ {dashboardStats.lucroMes.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lucro do Mês
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                icon={<TrendingUpIcon />} 
-                label="+15% este mês" 
-                color="success" 
-                size="small" 
-              />
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Lucro do Mês"
+            value={`R$ ${dashboardStats.lucroMes.toLocaleString()}`}
+            icon={<AttachMoneyIcon />}
+            color="info.main"
+          />
         </Grid>
       </Grid>
 

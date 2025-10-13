@@ -19,26 +19,44 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import colaboradorService from '../services/colaboradorService';
 
-// Schema de validação com Zod
+// Schema de validação com Zod - campos opcionais
 const colaboradorSchema = z.object({
   nome: z
     .string()
-    .min(1, 'Nome é obrigatório')
-    .min(3, 'Nome deve ter pelo menos 3 caracteres')
-    .max(255, 'Nome deve ter no máximo 255 caracteres'),
+    .optional()
+    .refine(
+      (val) => !val || val.length >= 3,
+      'Nome deve ter pelo menos 3 caracteres'
+    )
+    .refine(
+      (val) => !val || val.length <= 255,
+      'Nome deve ter no máximo 255 caracteres'
+    ),
   cpf: z
     .string()
-    .min(1, 'CPF é obrigatório')
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF deve estar no formato 000.000.000-00'),
+    .optional()
+    .refine(
+      (val) => !val || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val),
+      'CPF deve estar no formato 000.000.000-00'
+    ),
   email: z
     .string()
-    .min(1, 'Email é obrigatório')
-    .email('Email deve ter um formato válido')
-    .max(255, 'Email deve ter no máximo 255 caracteres'),
+    .optional()
+    .refine(
+      (val) => !val || z.string().email().safeParse(val).success,
+      'Email deve ter um formato válido'
+    )
+    .refine(
+      (val) => !val || val.length <= 255,
+      'Email deve ter no máximo 255 caracteres'
+    ),
   celular: z
     .string()
-    .min(1, 'Celular é obrigatório')
-    .regex(/^\(\d{2}\) \d{5}-\d{4}$/, 'Celular deve estar no formato (00) 00000-0000'),
+    .optional()
+    .refine(
+      (val) => !val || /^\(\d{2}\) \d{5}-\d{4}$/.test(val),
+      'Celular deve estar no formato (00) 00000-0000'
+    ),
   cnh_foto: z
     .any()
     .optional()
@@ -93,17 +111,21 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
     }
   });
 
-  // Preencher formulário quando estiver editando
+  // Preencher formulário quando estiver editando ou limpar quando abrir para novo colaborador
   useEffect(() => {
-    if (colaborador) {
-      setValue('nome', colaborador.nome || '');
-      setValue('cpf', colaborador.cpf || '');
-      setValue('email', colaborador.email || '');
-      setValue('celular', colaborador.celular || '');
-    } else {
-      reset();
+    if (open) {
+      if (colaborador) {
+        setValue('nome', colaborador.nome || '');
+        setValue('cpf', colaborador.cpf || '');
+        setValue('email', colaborador.email || '');
+        setValue('celular', colaborador.celular || '');
+      } else {
+        reset();
+      }
+      setValidationErrors({});
+      setAlert({ show: false, message: '', type: 'success' });
     }
-  }, [colaborador, setValue, reset]);
+  }, [open, colaborador, setValue, reset]);
 
   // Função para limpar erros de validação quando o usuário digita
   const clearFieldError = (fieldName) => {
@@ -266,7 +288,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="cpf"
-            label="CPF"
+            label="CPF (Opcional)"
             autoComplete="off"
             onChange={handleCpfChange}
             disabled={loading}
@@ -281,7 +303,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="email"
-            label="Email"
+            label="Email (Opcional)"
             autoComplete="email"
             type="email"
             disabled={loading}
@@ -298,7 +320,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="celular"
-            label="Celular"
+            label="Celular (Opcional)"
             autoComplete="tel"
             onChange={handleCelularChange}
             disabled={loading}
@@ -336,7 +358,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
         <Button
           onClick={handleSubmit(onSubmit)}
           variant="contained"
-          disabled={loading || !isValid}
+          disabled={loading}
         >
           {loading ? (
             <CircularProgress size={24} color="inherit" />

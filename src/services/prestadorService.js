@@ -35,16 +35,14 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
 
 const prestadorService = {
   // Obter todos os prestadores/colaboradores
-  async getPrestadores(filtros = {}) {
+  async getAll(page = 1, perPage = 10, search = '') {
     try {
       const queryParams = new URLSearchParams();
+      queryParams.append('page', page);
+      queryParams.append('per_page', perPage);
       
-      if (filtros && typeof filtros === 'object') {
-        Object.keys(filtros).forEach(key => {
-          if (filtros[key] !== null && filtros[key] !== undefined && filtros[key] !== '') {
-            queryParams.append(key, filtros[key]);
-          }
-        });
+      if (search) {
+        queryParams.append('search', search);
       }
 
       const url = `/prestadores${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
@@ -65,6 +63,11 @@ const prestadorService = {
     }
   },
 
+  // Obter todos os prestadores/colaboradores (método legado)
+  async getPrestadores(filtros = {}) {
+    return this.getAll(1, 10, filtros.search || '');
+  },
+
   // Obter prestador por ID
   async getPrestadorById(id) {
     try {
@@ -83,7 +86,7 @@ const prestadorService = {
   },
 
   // Criar novo prestador
-  async createPrestador(data) {
+  async create(data) {
     try {
       const response = await makeAuthenticatedRequest('/prestadores', {
         method: 'POST',
@@ -105,7 +108,7 @@ const prestadorService = {
   },
 
   // Atualizar prestador
-  async updatePrestador(id, data) {
+  async update(id, data) {
     try {
       const response = await makeAuthenticatedRequest(`/prestadores/${id}`, {
         method: 'PUT',
@@ -127,7 +130,7 @@ const prestadorService = {
   },
 
   // Deletar prestador
-  async deletePrestador(id) {
+  async delete(id) {
     try {
       const response = await makeAuthenticatedRequest(`/prestadores/${id}`, {
         method: 'DELETE'
@@ -144,6 +147,19 @@ const prestadorService = {
         message: error.message
       };
     }
+  },
+
+  // Métodos legados para compatibilidade
+  async createPrestador(data) {
+    return this.create(data);
+  },
+
+  async updatePrestador(id, data) {
+    return this.update(id, data);
+  },
+
+  async deletePrestador(id) {
+    return this.delete(id);
   },
 
   // Obter estatísticas

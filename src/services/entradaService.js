@@ -237,6 +237,27 @@ const entradaService = {
     }
   },
 
+  // Obter dados unificados para formulários de registro
+  async getRegistroFormData() {
+    try {
+      const response = await makeAuthenticatedRequest('/form-data/registros');
+      return response;
+    } catch (error) {
+      console.error('Erro ao buscar dados do formulário:', error);
+      return {
+        success: false,
+        message: error.message,
+        data: {
+          posicoes: [],
+          marcas: [],
+          seguradoras: [],
+          colaboradores: [],
+          prestadores: []
+        }
+      };
+    }
+  }
+
 };
 
 export default entradaService;

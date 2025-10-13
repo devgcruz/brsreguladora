@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, CircularProgress } from '@mui/material';
 import useAuthStore from './store/authStore';
+import useAppDataStore from './store/appDataStore';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -63,6 +64,7 @@ const theme = createTheme({
 
 function App() {
   const { init, loading, isAuthenticated, initialized, isInitializing } = useAuthStore();
+  const { loadDropdownData } = useAppDataStore();
 
   useEffect(() => {
     // Inicializar autenticação apenas uma vez
@@ -71,6 +73,14 @@ function App() {
       init();
     }
   }, [initialized, isInitializing, init]);
+
+  useEffect(() => {
+    // Inicializar dados dos dropdowns quando autenticado
+    if (isAuthenticated) {
+      console.log('🚀 App: Inicializando dados dos dropdowns...');
+      loadDropdownData();
+    }
+  }, [isAuthenticated, loadDropdownData]);
 
   // Mostrar loading enquanto inicializa
   if (loading && !initialized) {

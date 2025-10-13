@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -30,7 +30,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Stack
+  Avatar,
+  Tooltip
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -140,49 +141,29 @@ const ColaboradoresPage = () => {
       const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
       const imageUrl = `${baseUrl}/storage/${colaborador.cnh_path}`;
       
-      setCnhModal({ 
-        open: true, 
-        colaborador, 
-        imageUrl 
-      });
-    } else {
-      setAlert({
-        show: true,
-        message: 'Este colaborador não possui CNH cadastrada',
-        type: 'info'
+      setCnhModal({
+        open: true,
+        colaborador,
+        imageUrl
       });
     }
   };
 
-  // Confirmar exclusão
-  const confirmDelete = async () => {
-    if (!deleteDialog.colaborador) return;
+  // Fechar modal de CNH
+  const handleCloseCnhModal = () => {
+    setCnhModal({ open: false, colaborador: null, imageUrl: null });
+  };
 
-    try {
-      const response = await colaboradorService.delete(deleteDialog.colaborador.id);
-      
-      setAlert({
-        show: true,
-        message: response.message || 'Colaborador excluído com sucesso!',
-        type: 'success'
-      });
-      loadColaboradores(); // Recarregar lista
-    } catch (error) {
-      let errorMessage = 'Erro ao excluir colaborador';
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      
-      setAlert({
-        show: true,
-        message: errorMessage,
-        type: 'error'
-      });
-    } finally {
-      setDeleteDialog({ open: false, colaborador: null });
-    }
+  // Salvar colaborador (callback do modal)
+  const handleColaboradorSaved = () => {
+    setModalOpen(false);
+    setEditingColaborador(null);
+    loadColaboradores(); // Recarregar lista
+    setAlert({
+      show: true,
+      message: 'Colaborador salvo com sucesso!',
+      type: 'success'
+    });
   };
 
   // Fechar modal
@@ -191,54 +172,69 @@ const ColaboradoresPage = () => {
     setEditingColaborador(null);
   };
 
-  // Callback após salvar colaborador
-  const handleColaboradorSaved = () => {
-    loadColaboradores();
-    handleCloseModal();
+  // Confirmar exclusão
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog.colaborador) return;
+
+    try {
+      setLoading(true);
+      const response = await colaboradorService.delete(deleteDialog.colaborador.id);
+      
+      if (response.success) {
+        setAlert({
+          show: true,
+          message: 'Colaborador excluído com sucesso!',
+          type: 'success'
+        });
+        loadColaboradores(); // Recarregar lista
+      } else {
+        setAlert({
+          show: true,
+          message: response.message || 'Erro ao excluir colaborador',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao excluir colaborador:', error);
+      setAlert({
+        show: true,
+        message: 'Erro ao excluir colaborador',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+      setDeleteDialog({ open: false, colaborador: null });
+    }
+  };
+
+  // Cancelar exclusão
+  const handleCancelDelete = () => {
+    setDeleteDialog({ open: false, colaborador: null });
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 2, mb: 2, px: { xs: 1, sm: 2 } }}>
-      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'stretch', sm: 'center' },
-          mb: 3,
-          gap: 2
-        }}>
-          <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-            <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-            Gerenciar Colaboradores
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PersonIcon />
+            Gerenciamento de Colaboradores
           </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleNewColaborador}
-            sx={{ 
-              minWidth: { xs: '100%', sm: 160 },
-              alignSelf: { xs: 'stretch', sm: 'auto' }
-            }}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
           >
             Novo Colaborador
           </Button>
         </Box>
 
-        {alert.show && (
-          <Alert 
-            severity={alert.type} 
-            sx={{ mb: 3 }}
-            onClose={() => setAlert({ show: false, message: '', type: 'success' })}
-          >
-            {alert.message}
-          </Alert>
-        )}
-
-        {/* Campo de busca */}
+        {/* Barra de busca */}
         <TextField
           fullWidth
-          placeholder="Buscar por nome, CPF ou email..."
+          placeholder="Buscar colaboradores..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
@@ -248,10 +244,23 @@ const ColaboradoresPage = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ mb: 3 }}
+          sx={{ mb: 2 }}
         />
+      </Paper>
 
-        {/* Lista de colaboradores */}
+      {/* Alert */}
+      {alert.show && (
+        <Alert 
+          severity={alert.type} 
+          onClose={() => setAlert({ show: false, message: '', type: 'success' })}
+          sx={{ mb: 2 }}
+        >
+          {alert.message}
+        </Alert>
+      )}
+
+      {/* Conteúdo */}
+      <Paper sx={{ p: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -283,6 +292,7 @@ const ColaboradoresPage = () => {
                     <TableCell>CPF</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Celular</TableCell>
+                    <TableCell>CNH</TableCell>
                     <TableCell align="center">Ações</TableCell>
                   </TableRow>
                 </TableHead>
@@ -295,32 +305,60 @@ const ColaboradoresPage = () => {
                           {colaborador.nome}
                         </Box>
                       </TableCell>
-                      <TableCell>{colaborador.cpf}</TableCell>
-                      <TableCell>{colaborador.email}</TableCell>
-                      <TableCell>{colaborador.celular}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {colaborador.cpf || 'Não informado'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {colaborador.email || 'Não informado'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {colaborador.celular || 'Não informado'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        {colaborador.cnh_path ? (
+                          <Tooltip title="Visualizar CNH">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewCnh(colaborador)}
+                              color="primary"
+                            >
+                              <ImageIcon />
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Não enviada
+                          </Typography>
+                        )}
+                      </TableCell>
                       <TableCell align="center">
-                        <IconButton
-                          color="info"
-                          onClick={() => handleViewCnh(colaborador)}
-                          title="Visualizar CNH"
-                          disabled={!colaborador.cnh_path}
-                        >
-                          {colaborador.cnh_path ? <VisibilityIcon /> : <ImageIcon />}
-                        </IconButton>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleEditColaborador(colaborador)}
-                          title="Editar"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteColaborador(colaborador)}
-                          title="Excluir"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                        <Tooltip title="Editar">
+                          <IconButton
+                            edge="end"
+                            aria-label="editar"
+                            color="primary"
+                            sx={{ mr: 1 }}
+                            onClick={() => handleEditColaborador(colaborador)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Excluir">
+                          <IconButton
+                            edge="end"
+                            aria-label="deletar"
+                            color="error"
+                            onClick={() => handleDeleteColaborador(colaborador)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -340,50 +378,51 @@ const ColaboradoresPage = () => {
                       </Typography>
                     </Box>
                     
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        CPF: {colaborador.cpf}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Email: {colaborador.email}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Celular: {colaborador.celular}
-                      </Typography>
-                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      <strong>CPF:</strong> {colaborador.cpf || 'Não informado'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      <strong>Email:</strong> {colaborador.email || 'Não informado'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <strong>Celular:</strong> {colaborador.celular || 'Não informado'}
+                    </Typography>
                     
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <IconButton
-                        color="info"
-                        onClick={() => handleViewCnh(colaborador)}
-                        title="Visualizar CNH"
-                        disabled={!colaborador.cnh_path}
-                        size="small"
-                      >
-                        {colaborador.cnh_path ? <VisibilityIcon /> : <ImageIcon />}
-                      </IconButton>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEditColaborador(colaborador)}
-                        title="Editar"
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteColaborador(colaborador)}
-                        title="Excluir"
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      {colaborador.cnh_path && (
+                        <Tooltip title="Visualizar CNH">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewCnh(colaborador)}
+                            color="primary"
+                          >
+                            <ImageIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title="Editar">
+                        <IconButton
+                          edge="end"
+                          aria-label="editar"
+                          color="primary"
+                          size="small"
+                          sx={{ mr: 1 }}
+                          onClick={() => handleEditColaborador(colaborador)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Excluir">
+                        <IconButton
+                          edge="end"
+                          aria-label="deletar"
+                          color="error"
+                          size="small"
+                          onClick={() => handleDeleteColaborador(colaborador)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </CardContent>
                 </Card>
@@ -392,7 +431,7 @@ const ColaboradoresPage = () => {
           </>
         )}
 
-        {/* Controles de paginação */}
+        {/* Paginação */}
         {colaboradores.length > 0 && (
           <Box sx={{ 
             mt: 3, 
@@ -403,7 +442,6 @@ const ColaboradoresPage = () => {
             flexWrap: 'wrap', 
             gap: 2 
           }}>
-            {/* Informações de paginação */}
             <Box sx={{ 
               display: 'flex', 
               flexDirection: { xs: 'column', sm: 'row' },
@@ -414,7 +452,6 @@ const ColaboradoresPage = () => {
                 Mostrando {paginationInfo.from || 0} a {paginationInfo.to || 0} de {totalItems} colaboradores
               </Typography>
               
-              {/* Seletor de itens por página */}
               <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
                 <InputLabel>Por página</InputLabel>
                 <Select
@@ -430,7 +467,6 @@ const ColaboradoresPage = () => {
               </FormControl>
             </Box>
 
-            {/* Componente de paginação */}
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Pagination
                 count={totalPages}
@@ -449,104 +485,108 @@ const ColaboradoresPage = () => {
         )}
       </Paper>
 
-      {/* Dialog de confirmação de exclusão */}
-      <Dialog
-        open={deleteDialog.open}
-        onClose={() => setDeleteDialog({ open: false, colaborador: null })}
-        disableEnforceFocus
-        disableAutoFocus
-        disableRestoreFocus
-      >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir o colaborador "{deleteDialog.colaborador?.nome}"?
-            Esta ação não pode ser desfeita.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialog({ open: false, colaborador: null })}>
-            Cancelar
-          </Button>
-          <Button onClick={confirmDelete} color="error" variant="contained">
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Modal de visualização da CNH */}
-      <Dialog
-        open={cnhModal.open}
-        onClose={() => setCnhModal({ open: false, colaborador: null, imageUrl: null })}
-        maxWidth="md"
-        fullWidth
-        disableEnforceFocus
-        disableAutoFocus
-        disableRestoreFocus
-        sx={{
-          '& .MuiDialog-paper': {
-            width: '100%',
-            maxWidth: { xs: '95vw', sm: '800px' },
-            maxHeight: { xs: '95vh', sm: '80vh' },
-            margin: { xs: '8px', sm: '32px' }
-          }
+      {/* FAB para mobile */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleNewColaborador}
+        sx={{ 
+          position: 'fixed', 
+          bottom: 16, 
+          right: 16,
+          display: { xs: 'flex', sm: 'none' }
         }}
       >
-        <DialogTitle>
-          CNH - {cnhModal.colaborador?.nome}
-        </DialogTitle>
-        <DialogContent>
-          {cnhModal.imageUrl && (
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <img
-                src={cnhModal.imageUrl}
-                alt={`CNH de ${cnhModal.colaborador?.nome}`}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px'
-                }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <Box sx={{ display: 'none', py: 4 }}>
-                <Typography variant="h6" color="error">
-                  Erro ao carregar imagem
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  A imagem da CNH não pôde ser carregada
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Button 
-                    variant="outlined" 
-                    size="small"
-                    onClick={() => window.open(cnhModal.imageUrl, '_blank')}
-                  >
-                    Tentar abrir em nova aba
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCnhModal({ open: false, colaborador: null, imageUrl: null })}>
-            Fechar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <AddIcon />
+      </Fab>
 
-      {/* Modal de cadastro/edição */}
+      {/* Modal de edição/criação */}
       <ColaboradorModal
         open={modalOpen}
         onClose={handleCloseModal}
         colaborador={editingColaborador}
         onSaved={handleColaboradorSaved}
       />
+
+      {/* Modal de visualização da CNH */}
+      <Dialog
+        open={cnhModal.open}
+        onClose={handleCloseCnhModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          CNH - {cnhModal.colaborador?.nome}
+        </DialogTitle>
+        <DialogContent>
+          {cnhModal.imageUrl && (
+            <Box sx={{ textAlign: 'center' }}>
+              <img
+                src={cnhModal.imageUrl}
+                alt={`CNH de ${cnhModal.colaborador?.nome}`}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCnhModal}>
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        BackdropProps={{
+          sx: {
+            backdropFilter: 'blur(15px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            WebkitBackdropFilter: 'blur(15px)'
+          }
+        }}
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja deletar o colaborador "{deleteDialog.colaborador?.nome}"? 
+            Esta ação não pode ser desfeita.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCancelDelete} 
+            variant="contained" 
+            color="error"
+          >
+            NÃO
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            variant="outlined" 
+            disabled={loading}
+            sx={{ 
+              color: 'grey.600',
+              borderColor: 'grey.400',
+              '&:hover': {
+                borderColor: 'grey.500',
+                backgroundColor: 'grey.50'
+              }
+            }}
+          >
+            Deletar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

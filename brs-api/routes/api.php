@@ -15,6 +15,7 @@ use App\Http\Controllers\PosicaoController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\SeguradoraController;
 use App\Http\Controllers\ObservacaoController;
+use App\Http\Controllers\FormDataController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/entradas/check-placa', [EntradaController::class, 'checkPlaca']);
     Route::get('/entradas/statistics', [EntradaController::class, 'statistics']);
     Route::apiResource('entradas', EntradaController::class);
+    
+    // Dados de formulário unificados
+    Route::get('/form-data/registros', [FormDataController::class, 'getRegistroFormData']);
     
     // Financeiros aninhados por entrada
     Route::get('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'indexByEntrada']);

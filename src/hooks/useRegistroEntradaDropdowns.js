@@ -1,83 +1,55 @@
-import { useState, useEffect } from 'react';
-import posicaoService from '../services/posicaoService';
-import marcaService from '../services/marcaService';
-import seguradoraService from '../services/seguradoraService';
-import colaboradorService from '../services/colaboradorService';
+ import { useEffect } from 'react';
+import useAppDataStore from '../store/appDataStore';
 
 const useRegistroEntradaDropdowns = () => {
-  // Estados para armazenar os dados
-  const [posicoes, setPosicoes] = useState([]);
-  const [marcas, setMarcas] = useState([]);
-  const [seguradoras, setSeguradoras] = useState([]);
-  const [colaboradores, setColaboradores] = useState([]);
-  
-  // Estados de loading
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Função para buscar todos os dados
-  const loadAllData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Buscar dados em paralelo para melhor performance
-      const [posicoesResponse, marcasResponse, seguradorasResponse, colaboradoresResponse] = await Promise.all([
-        posicaoService.getAll(1, 1000), // Buscar até 1000 registros
-        marcaService.getAll(1, 1000),
-        seguradoraService.getAll(1, 1000),
-        colaboradorService.getAll(1, 1000)
-      ]);
-
-      // Verificar se todas as respostas foram bem-sucedidas
-      if (posicoesResponse.success) {
-        setPosicoes(posicoesResponse.data);
-      }
-      
-      if (marcasResponse.success) {
-        setMarcas(marcasResponse.data);
-      }
-      
-      if (seguradorasResponse.success) {
-        setSeguradoras(seguradorasResponse.data);
-      }
-      
-      if (colaboradoresResponse.success) {
-        setColaboradores(colaboradoresResponse.data);
-      }
-
-    } catch (err) {
-      console.error('Erro ao carregar dados dos dropdowns:', err);
-      setError('Erro ao carregar dados');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    dropdownData,
+    loading,
+    error,
+    initialized,
+    loadDropdownData,
+    invalidateCache,
+    forceReload,
+    clearError,
+    isDataLoaded
+  } = useAppDataStore();
 
   // Carregar dados quando o hook for inicializado
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (!initialized) {
+      loadDropdownData();
+    }
+  }, [initialized, loadDropdownData]);
 
   // Função para recarregar dados (útil quando novos itens são adicionados)
   const reloadData = () => {
-    loadAllData();
+    invalidateCache();
+  };
+
+  // Função para forçar recarregamento (ignora cache)
+  const forceReloadData = () => {
+    forceReload();
   };
 
   // Retornar os dados e funções úteis
   return {
     // Dados
-    posicoes,
-    marcas,
-    seguradoras,
-    colaboradores,
+    posicoes: dropdownData.posicoes || [],
+    marcas: dropdownData.marcas || [],
+    seguradoras: dropdownData.seguradoras || [],
+    colaboradores: dropdownData.colaboradores || [],
+    prestadores: dropdownData.prestadores || [],
     
     // Estados
     loading,
     error,
+    initialized,
+    isDataLoaded: isDataLoaded(),
     
     // Funções
-    reloadData
+    reloadData,
+    forceReloadData,
+    clearError
   };
 };
 
