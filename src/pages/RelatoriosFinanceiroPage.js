@@ -34,7 +34,9 @@ import {
   Description as DescriptionIcon,
   FileDownload as DownloadIcon,
   Assignment as AssignmentIcon,
-  Assessment as AssessmentIcon
+  Assessment as AssessmentIcon,
+  AccountBalanceWallet as AccountBalanceWalletIcon,
+  Calculate as CalculateIcon
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 // Removido date-fns - usando formatação nativa do JavaScript
@@ -84,15 +86,39 @@ const RelatoriosFinanceiroPage = () => {
               const financeirosResponse = await financeiroService.getFinanceirosByEntrada(entrada.id);
               const financeiros = financeirosResponse.data || [];
               
+              
               return {
                 entrada,
-                financeiros: financeiros.filter(fin => 
-                  // Filtrar por data de pagamento da nota fiscal se especificada
-                  !filtros.dataInicio || !filtros.dataFim || 
-                  (fin.data_pagamento_nota_fiscal && 
-                   new Date(fin.data_pagamento_nota_fiscal) >= new Date(filtros.dataInicio) &&
-                   new Date(fin.data_pagamento_nota_fiscal) <= new Date(filtros.dataFim))
-                )
+                financeiros: financeiros.filter(fin => {
+                  // Se não há filtros de data, retornar todos os lançamentos
+                  if (!filtros.dataInicio || !filtros.dataFim) {
+                    return true;
+                  }
+                  
+                  // Verificar se o lançamento tem alguma data que corresponde ao filtro
+                  const dataInicio = new Date(filtros.dataInicio);
+                  const dataFim = new Date(filtros.dataFim);
+                  
+                  // Verificar múltiplas datas possíveis para o filtro
+                  const datasParaVerificar = [
+                    fin.data_pagamento_recibo,
+                    fin.data_pagamento_nota_fiscal,
+                    fin.data_nota_fiscal,
+                    fin.data_recibo,
+                    fin.created_at
+                  ].filter(Boolean); // Remove datas nulas/undefined
+                  
+                  // Se não há datas para verificar, incluir o lançamento
+                  if (datasParaVerificar.length === 0) {
+                    return true;
+                  }
+                  
+                  // Verificar se alguma das datas está no intervalo
+                  return datasParaVerificar.some(data => {
+                    const dataLancamento = new Date(data);
+                    return dataLancamento >= dataInicio && dataLancamento <= dataFim;
+                  });
+                })
               };
             } catch (error) {
               console.error(`Erro ao buscar financeiros para entrada ${entrada.id}:`, error);
@@ -199,36 +225,43 @@ const RelatoriosFinanceiroPage = () => {
         if (financeiros.length === 0) {
           // Se não há lançamentos financeiros, adicionar apenas a entrada com campos vazios
           dadosExportacao.push({
-            'Data': formatarData(entrada.data_registro),
+            'Protocolo': entrada.id || entrada.protocolo || '-',
+            'Data Registro Entrada': formatarData(entrada.data_registro),
             'Veículo': entrada.veiculo || '-',
             'Placa': entrada.placa || '-',
             'Chassi': entrada.chassi || '-',
             'Sinistro': entrada.cod_sinistro || '-',
+            'Seguradora': entrada.seguradora || '-',
+            'Data Inclusao Despesa': '-',
             'Despesas': '-',
             'Data Pagto Despesas': '-',
+            'Data Inclusao Nota Fiscal': '-',
             'Nota Fiscal': '-',
             'Honorários': '-',
             'Data Pagto Honorários': '-',
             'Status': '-',
-            'Observações': '-'
+            'Observações': entrada.observacoes || '-'
           });
         } else {
           // Para cada lançamento financeiro, criar uma linha separada
-          // SEMPRE repetindo os dados do veículo (Data, Veículo, Placa, Chassi, Sinistro)
           financeiros.forEach((financeiro) => {
             dadosExportacao.push({
-              'Data': formatarData(entrada.data_registro),
+              'Protocolo': entrada.id || entrada.protocolo || '-',
+              'Data Registro Entrada': formatarData(entrada.data_registro),
               'Veículo': entrada.veiculo || '-',
               'Placa': entrada.placa || '-',
               'Chassi': entrada.chassi || '-',
               'Sinistro': entrada.cod_sinistro || '-',
+              'Seguradora': entrada.seguradora || '-',
+              'Data Inclusao Despesa': formatarData(financeiro.data_recibo || financeiro.created_at),
               'Despesas': formatarMoeda(financeiro.valor_total_recibo),
               'Data Pagto Despesas': formatarData(financeiro.data_pagamento_recibo),
+              'Data Inclusao Nota Fiscal': formatarData(financeiro.data_nota_fiscal),
               'Nota Fiscal': financeiro.numero_nota_fiscal || '-',
               'Honorários': formatarMoeda(financeiro.valor_nota_fiscal),
               'Data Pagto Honorários': formatarData(financeiro.data_pagamento_nota_fiscal),
               'Status': financeiro.status_pagamento || 'Pendente',
-              'Observações': financeiro.observacao || financeiro.OBSERVACOES || '-'
+              'Observações': financeiro.observacao || financeiro.OBSERVACOES || entrada.observacoes || '-'
             });
           });
         }
@@ -439,7 +472,8 @@ const RelatoriosFinanceiroPage = () => {
                               Nenhum lançamento financeiro encontrado para este registro.
                             </Alert>
                           ) : (
-                            <Grid container spacing={2}>
+                            <>
+                              <Grid container spacing={2}>
                               {financeiros.map((financeiro, index) => (
                                 <Grid item xs={12} key={financeiro.id}>
                                   <Card variant="outlined">
@@ -550,6 +584,75 @@ const RelatoriosFinanceiroPage = () => {
                                 </Grid>
                               ))}
                             </Grid>
+                            
+                            {/* Totais do Registro */}
+                            {financeiros.length > 0 && (
+                              <Box sx={{ mt: 3, pt: 2, borderTop: '2px solid #e0e0e0' }}>
+                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                                  Totais do Registro
+                                </Typography>
+                                <Grid container spacing={2}>
+                                  <Grid item xs={12} sm={6}>
+                                    <Paper sx={{ p: 2, backgroundColor: '#e8f5e8', border: '1px solid #4caf50' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <ReceiptIcon color="success" />
+                                        <Box>
+                                          <Typography variant="caption" color="text.secondary">
+                                            Total Despesas (Recibos)
+                                          </Typography>
+                                          <Typography variant="h6" fontWeight="bold" color="success.main">
+                                            {formatarMoeda(
+                                              financeiros.reduce((total, fin) => 
+                                                total + (parseFloat(fin.valor_total_recibo) || 0), 0
+                                              )
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    </Paper>
+                                  </Grid>
+                                  <Grid item xs={12} sm={6}>
+                                    <Paper sx={{ p: 2, backgroundColor: '#e3f2fd', border: '1px solid #2196f3' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <AccountBalanceWalletIcon color="primary" />
+                                        <Box>
+                                          <Typography variant="caption" color="text.secondary">
+                                            Total Honorários (Notas Fiscais)
+                                          </Typography>
+                                          <Typography variant="h6" fontWeight="bold" color="primary.main">
+                                            {formatarMoeda(
+                                              financeiros.reduce((total, fin) => 
+                                                total + (parseFloat(fin.valor_nota_fiscal) || 0), 0
+                                              )
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    </Paper>
+                                  </Grid>
+                                  <Grid item xs={12}>
+                                    <Paper sx={{ p: 2, backgroundColor: '#fff3e0', border: '1px solid #ff9800' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                                        <CalculateIcon color="warning" />
+                                        <Box sx={{ textAlign: 'center' }}>
+                                          <Typography variant="caption" color="text.secondary">
+                                            Total Geral do Registro
+                                          </Typography>
+                                          <Typography variant="h5" fontWeight="bold" color="warning.main">
+                                            {formatarMoeda(
+                                              financeiros.reduce((total, fin) => 
+                                                total + (parseFloat(fin.valor_total_recibo) || 0) + (parseFloat(fin.valor_nota_fiscal) || 0), 0
+                                              )
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    </Paper>
+                                  </Grid>
+                                </Grid>
+                              </Box>
+                            )}
+                            </>
                           )}
                         </Box>
                       </Collapse>
