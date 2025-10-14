@@ -30,7 +30,6 @@ import PdfModal from './PdfModal';
 import FinanceiroTab from './financeiro/FinanceiroTab';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
-import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 import { validatePlaca } from '../utils/placaValidator';
 
@@ -59,39 +58,17 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     setActiveTab(newValue);
   };
   
-  // Hook otimizado para dropdowns (apenas colaboradores agora)
-  const {
-    colaboradorOptions,
-    loading: loadingColaboradores,
-    loadColaboradores,
-    clearCache
-  } = useOptimizedDropdowns();
-
   // Hook para dados dinâmicos dos selects
   const {
     posicoes,
     marcas,
     seguradoras,
-    colaboradores: colaboradoresDinamicos,
+    colaboradores,
     loading: loadingDropdowns,
     error: errorDropdowns,
     reloadData: reloadDropdowns
   } = useRegistroEntradaDropdowns();
   
-  // Carregar dados dos dropdowns quando o modal for aberto
-  useEffect(() => {
-    if (open) {
-      // Carrega Colaboradores
-      loadColaboradores()
-        .then(() => {
-          console.log('[NovoRegistroModal] Dados dos dropdowns carregados com sucesso');
-        })
-        .catch((error) => {
-          console.error('[NovoRegistroModal] Erro ao carregar dados dos dropdowns:', error);
-          setError('Erro ao carregar dados dos dropdowns');
-        });
-    }
-  }, [open, loadColaboradores]);
 
   const [formData, setFormData] = useState({
     protocolo: '',
@@ -298,7 +275,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
 
       // Preparar dados para a API
       const dadosParaAPI = {
-        ID_COLABORADOR: formData.colaborador ? colaboradorOptions.find(c => c && c.label === formData.colaborador)?.id : null,
+        ID_COLABORADOR: formData.colaborador ? colaboradores.find(c => c && c.label === formData.colaborador)?.id : null,
         DATA_ENTRADA: formData.entrada,
         MARCA: formData.marca,
         VEICULO: formData.veiculo,
@@ -373,7 +350,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     } finally {
       setLoading(false);
     }
-  }, [formData, onSave, colaboradorOptions, onClose]);
+  }, [formData, onSave, colaboradores, onClose]);
 
   const handleClose = useCallback(() => {
     // Resetar todos os campos para strings vazias para evitar mudança de controlado para não controlado
@@ -428,10 +405,8 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
       message: '',
       severity: 'error'
     });
-    // Limpar cache dos dropdowns
-    clearCache();
     onClose();
-  }, [onClose, clearCache]);
+  }, [onClose]);
 
   // Estilo comum para campos de formulário
   const fieldSx = {
@@ -703,7 +678,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
               label="Colaborador"
               value={formData.colaborador || ""}
               onChange={handleInputChange('colaborador')}
-              options={colaboradoresDinamicos}
+              options={colaboradores}
               loading={loadingDropdowns}
             />
           </Grid>

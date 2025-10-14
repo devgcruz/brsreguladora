@@ -33,7 +33,6 @@ import FinanceiroTab from './financeiro/FinanceiroTab';
 import ObservacoesFeed from './ObservacoesFeed';
 import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
-import useOptimizedDropdowns from '../hooks/useOptimizedDropdowns';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 import { validatePlaca } from '../utils/placaValidator';
 
@@ -60,19 +59,12 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     setActiveTab(newValue);
   };
   
-  // Hook otimizado para dropdowns (apenas colaboradores agora)
-  const {
-    loading: dropdownsLoading,
-    colaboradorOptions,
-    loadColaboradores
-  } = useOptimizedDropdowns();
-
   // Hook para dados dinâmicos dos selects
   const {
     posicoes,
     marcas,
     seguradoras,
-    colaboradores: colaboradoresDinamicos,
+    colaboradores,
     loading: loadingDropdowns,
     error: errorDropdowns,
     reloadData: reloadDropdowns
@@ -124,9 +116,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   // SOLUÇÃO ARQUITETURAL DEFINITIVA: ESTADO CENTRALIZADO
   useEffect(() => {
     if (open && registroData) {
-      // Carregar colaboradores
-      loadColaboradores();
-
       // Preencher valores dos dropdowns de UF/Cidade
       setDropdownValues({
         ufSinistro: String(registroData.uf_sinistro || ''),
@@ -177,7 +166,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         colaborador: ''
       });
     }
-  }, [open, registroData, loadColaboradores]);
+  }, [open, registroData]);
 
 
   // Função para validar formato da placa
@@ -286,7 +275,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
 
       // Preparar dados para a API
       const dadosParaAPI = {
-        ID_COLABORADOR: finalData.colaborador ? colaboradorOptions.find(c => c && c.label === finalData.colaborador)?.id : null,
+        ID_COLABORADOR: finalData.colaborador ? colaboradores.find(c => c && c.label === finalData.colaborador)?.id : null,
         DATA_ENTRADA: finalData.entrada,
         MARCA: finalData.marca,
         VEICULO: finalData.veiculo,
@@ -357,7 +346,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
     } finally {
       // Salvamento concluído
     }
-  }, [textFieldsData, dropdownValues, onSave, colaboradorOptions, registroData]);
+  }, [textFieldsData, dropdownValues, onSave, colaboradores, registroData]);
 
   const handleClose = useCallback(() => {
     // Resetar todos os campos para strings vazias para evitar mudança de controlado para não controlado
@@ -638,7 +627,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               label="Colaborador"
               value={dropdownValues.colaborador || ""}
               onChange={(value) => handleDropdownChange('colaborador', value)}
-              options={colaboradoresDinamicos}
+              options={colaboradores}
               loading={loadingDropdowns}
             />
           </Grid>
@@ -934,7 +923,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           </Alert>
         )}
 
-        {dropdownsLoading ? (
+        {loadingDropdowns ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">
             <CircularProgress />
             <Typography sx={{ ml: 2 }}>Carregando dados...</Typography>

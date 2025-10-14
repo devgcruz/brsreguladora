@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Posicao;
 use App\Models\Marca;
 use App\Models\Seguradora;
+use App\Models\Colaborador;
 use App\Models\Prestador;
 use Illuminate\Http\JsonResponse;
 
@@ -30,8 +31,8 @@ class FormDataController extends Controller
                     ->orderBy('nome')
                     ->get(),
                     
-                'colaboradores' => Prestador::select('ID_PRESTADOR as id', 'NOME as nome')
-                    ->orderBy('NOME')
+                'colaboradores' => Colaborador::select('id', 'nome')
+                    ->orderBy('nome')
                     ->get(),
                     
                 'prestadores' => Prestador::select('ID_PRESTADOR as id', 'NOME as nome')

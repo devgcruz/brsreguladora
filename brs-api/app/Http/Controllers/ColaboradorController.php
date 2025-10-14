@@ -16,6 +16,16 @@ class ColaboradorController extends Controller
      */
     public function index(Request $request)
     {
+        // Se o parâmetro 'all' for verdadeiro, retorne todos os colaboradores
+        if ($request->get('all')) {
+            $colaboradores = Colaborador::orderBy('nome', 'asc')->get();
+            return response()->json([
+                'success' => true,
+                'data' => $colaboradores
+            ]);
+        }
+
+        // Lógica de paginação existente
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search', '');
         

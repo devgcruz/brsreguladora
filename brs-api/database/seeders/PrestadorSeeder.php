@@ -70,3 +70,4 @@ class PrestadorSeeder extends Seeder
         $this->command->info('Prestadores criados com sucesso!');
     }
 }
+
