@@ -119,9 +119,9 @@ class FinanceiroController extends Controller
      */
     public function getByEntrada(Entrada $entrada): JsonResponse
     {
-        $financeiro = Financeiro::where('ID_ENTRADA', $entrada->Id_Entrada)->first();
+        $financeiros = Financeiro::where('ID_ENTRADA', $entrada->Id_Entrada)->get();
 
-        if (!$financeiro) {
+        if ($financeiros->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Dados financeiros não encontrados para esta entrada'
@@ -130,7 +130,7 @@ class FinanceiroController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new FinanceiroResource($financeiro)
+            'data' => FinanceiroResource::collection($financeiros)
         ]);
     }
 

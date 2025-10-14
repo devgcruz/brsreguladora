@@ -22,6 +22,8 @@ class Financeiro extends Model
         'NUMERO_NOTA_FISCAL',
         'VALOR_NOTA_FISCAL',
         'DATA_PAGAMENTO_NOTA_FISCAL',
+        'data_recibo',          // Adicione esta linha
+        'status_nota_fiscal',   // Adicione esta linha
         'OBSERVACOES',
         'StatusPG'
     ];
@@ -30,6 +32,7 @@ class Financeiro extends Model
         'DATA_PAGAMENTO_RECIBO' => 'date',
         'DATA_NOTA_FISCAL' => 'date',
         'DATA_PAGAMENTO_NOTA_FISCAL' => 'date',
+        'data_recibo' => 'date',
         'VALOR_TOTAL_RECIBO' => 'decimal:2',
         'VALOR_NOTA_FISCAL' => 'decimal:2'
     ];

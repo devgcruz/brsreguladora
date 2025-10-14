@@ -288,7 +288,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="cpf"
-            label="CPF (Opcional)"
+            label="CPF"
             autoComplete="off"
             onChange={handleCpfChange}
             disabled={loading}
@@ -303,7 +303,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="email"
-            label="Email (Opcional)"
+            label="Email"
             autoComplete="email"
             type="email"
             disabled={loading}
@@ -320,7 +320,7 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
             margin="normal"
             fullWidth
             id="celular"
-            label="Celular (Opcional)"
+            label="Celular"
             autoComplete="tel"
             onChange={handleCelularChange}
             disabled={loading}

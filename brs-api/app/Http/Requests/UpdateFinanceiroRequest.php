@@ -23,18 +23,16 @@ class UpdateFinanceiroRequest extends FormRequest
     {
         return [
             'ID_ENTRADA' => 'sometimes|exists:tab_entrada,Id_Entrada',
-            'DATA_NF' => 'nullable|date',
-            'NUM_NF' => 'nullable|string|max:100',
-            'Honorarios' => 'nullable|numeric|min:0',
-            'Data_Pagto_Honor' => 'nullable|date',
-            'Vlr_Despesas' => 'nullable|numeric|min:0',
-            'Data_pagto_Desp' => 'nullable|date',
-            'Baixa_NF' => 'nullable|string|max:100',
-            'Valor' => 'nullable|numeric|min:0',
-            'Data_Pagamento' => 'nullable|date',
-            'Banco' => 'nullable|string|max:100',
+            'NUMERO_RECIBO' => 'nullable|string|max:100',
+            'VALOR_TOTAL_RECIBO' => 'nullable|numeric|min:0',
+            'DATA_PAGAMENTO_RECIBO' => 'nullable|date',
+            'DATA_NOTA_FISCAL' => 'nullable|date',
+            'NUMERO_NOTA_FISCAL' => 'nullable|string|max:100',
+            'VALOR_NOTA_FISCAL' => 'nullable|numeric|min:0',
+            'DATA_PAGAMENTO_NOTA_FISCAL' => 'nullable|date',
+            'data_recibo' => 'nullable|date',
+            'status_nota_fiscal' => 'nullable|string|max:255',
             'OBSERVACOES' => 'nullable|string',
-            'INFO_ADICIONAIS' => 'nullable|string',
             'StatusPG' => 'nullable|string|max:50'
         ];
     }
@@ -48,19 +46,17 @@ class UpdateFinanceiroRequest extends FormRequest
     {
         return [
             'ID_ENTRADA.exists' => 'A entrada selecionada não existe.',
-            'DATA_NF.date' => 'O campo data da NF deve ser uma data válida.',
-            'NUM_NF.max' => 'O campo número da NF não pode ter mais de 100 caracteres.',
-            'Honorarios.numeric' => 'O campo honorários deve ser um número.',
-            'Honorarios.min' => 'O campo honorários não pode ser negativo.',
-            'Data_Pagto_Honor.date' => 'O campo data de pagamento dos honorários deve ser uma data válida.',
-            'Vlr_Despesas.numeric' => 'O campo valor das despesas deve ser um número.',
-            'Vlr_Despesas.min' => 'O campo valor das despesas não pode ser negativo.',
-            'Data_pagto_Desp.date' => 'O campo data de pagamento das despesas deve ser uma data válida.',
-            'Baixa_NF.max' => 'O campo baixa NF não pode ter mais de 100 caracteres.',
-            'Valor.numeric' => 'O campo valor deve ser um número.',
-            'Valor.min' => 'O campo valor não pode ser negativo.',
-            'Data_Pagamento.date' => 'O campo data de pagamento deve ser uma data válida.',
-            'Banco.max' => 'O campo banco não pode ter mais de 100 caracteres.',
+            'NUMERO_RECIBO.max' => 'O campo número do recibo não pode ter mais de 100 caracteres.',
+            'VALOR_TOTAL_RECIBO.numeric' => 'O campo valor total do recibo deve ser um número.',
+            'VALOR_TOTAL_RECIBO.min' => 'O campo valor total do recibo não pode ser negativo.',
+            'DATA_PAGAMENTO_RECIBO.date' => 'O campo data de pagamento do recibo deve ser uma data válida.',
+            'DATA_NOTA_FISCAL.date' => 'O campo data da nota fiscal deve ser uma data válida.',
+            'NUMERO_NOTA_FISCAL.max' => 'O campo número da nota fiscal não pode ter mais de 100 caracteres.',
+            'VALOR_NOTA_FISCAL.numeric' => 'O campo valor da nota fiscal deve ser um número.',
+            'VALOR_NOTA_FISCAL.min' => 'O campo valor da nota fiscal não pode ser negativo.',
+            'DATA_PAGAMENTO_NOTA_FISCAL.date' => 'O campo data de pagamento da nota fiscal deve ser uma data válida.',
+            'data_recibo.date' => 'O campo data do recibo deve ser uma data válida.',
+            'status_nota_fiscal.max' => 'O campo status da nota fiscal não pode ter mais de 255 caracteres.',
             'StatusPG.max' => 'O campo status do pagamento não pode ter mais de 50 caracteres.'
         ];
     }

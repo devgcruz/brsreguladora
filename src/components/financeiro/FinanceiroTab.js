@@ -60,15 +60,24 @@ const FinanceiroTab = ({ entradaId }) => {
     NUMERO_RECIBO: '',
     VALOR_TOTAL_RECIBO: '',
     DATA_PAGAMENTO_RECIBO: '',
+    data_recibo: '',
     DATA_NOTA_FISCAL: '',
     NUMERO_NOTA_FISCAL: '',
     VALOR_NOTA_FISCAL: '',
     DATA_PAGAMENTO_NOTA_FISCAL: '',
+    status_nota_fiscal: '',
     OBSERVACOES: '',
     StatusPG: 'Pendente'
   });
 
   const statusOptions = [
+    'Pendente',
+    'Pago',
+    'Em análise',
+    'Rejeitado'
+  ];
+
+  const statusNotaFiscalOptions = [
     'Pendente',
     'Pago',
     'Em análise',
@@ -117,10 +126,12 @@ const FinanceiroTab = ({ entradaId }) => {
       NUMERO_RECIBO: '',
       VALOR_TOTAL_RECIBO: '',
       DATA_PAGAMENTO_RECIBO: '',
+      data_recibo: '',
       DATA_NOTA_FISCAL: '',
       NUMERO_NOTA_FISCAL: '',
       VALOR_NOTA_FISCAL: '',
       DATA_PAGAMENTO_NOTA_FISCAL: '',
+      status_nota_fiscal: '',
       OBSERVACOES: '',
       StatusPG: 'Pendente'
     });
@@ -162,10 +173,12 @@ const FinanceiroTab = ({ entradaId }) => {
       NUMERO_RECIBO: financeiro.numero_recibo || '',
       VALOR_TOTAL_RECIBO: financeiro.valor_total_recibo || '',
       DATA_PAGAMENTO_RECIBO: financeiro.data_pagamento_recibo || '',
+      data_recibo: financeiro.data_recibo || '',
       DATA_NOTA_FISCAL: financeiro.data_nota_fiscal || '',
       NUMERO_NOTA_FISCAL: financeiro.numero_nota_fiscal || '',
       VALOR_NOTA_FISCAL: financeiro.valor_nota_fiscal || '',
       DATA_PAGAMENTO_NOTA_FISCAL: financeiro.data_pagamento_nota_fiscal || '',
+      status_nota_fiscal: financeiro.status_nota_fiscal || '',
       OBSERVACOES: financeiro.observacao || '',
       StatusPG: financeiro.status_pagamento || 'Pendente'
     });
@@ -414,19 +427,32 @@ const FinanceiroTab = ({ entradaId }) => {
               </Tabs>
             </Box>
             
-            <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+            <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
               {activeTab === 0 && (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
               {/* Seção 1: Dados do Recibo */}
               <Grid item xs={12}>
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 1.5 }}>
                   <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                     Dados do Recibo
                   </Typography>
-                  <Divider sx={{ mt: 1 }} />
+                  <Divider sx={{ mt: 0.5 }} />
                 </Box>
               </Grid>
               
+              <Grid item xs={6}>
+                <TextField
+                  name="data_recibo"
+                  label="Data do Recibo"
+                  type="date"
+                  value={formData.data_recibo}
+                  onChange={handleInputChange}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  variant="outlined"
+                  size="small"
+                />
+              </Grid>
               <Grid item xs={6}>
                 <TextField
                   name="NUMERO_RECIBO"
@@ -435,6 +461,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -447,6 +474,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   fullWidth
                   inputProps={{ step: "0.01", min: "0" }}
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -459,10 +487,11 @@ const FinanceiroTab = ({ entradaId }) => {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth variant="outlined" size="small">
                   <InputLabel>Status</InputLabel>
                   <Select
                     name="StatusPG"
@@ -481,11 +510,11 @@ const FinanceiroTab = ({ entradaId }) => {
               
               {/* Seção 2: Dados da Nota Fiscal */}
               <Grid item xs={12}>
-                <Box sx={{ mb: 2, mt: 3 }}>
+                <Box sx={{ mb: 1.5, mt: 2 }}>
                   <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
                     Dados da Nota Fiscal
                   </Typography>
-                  <Divider sx={{ mt: 1 }} />
+                  <Divider sx={{ mt: 0.5 }} />
                 </Box>
               </Grid>
               
@@ -499,6 +528,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -509,6 +539,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   onChange={handleInputChange}
                   fullWidth
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -521,6 +552,7 @@ const FinanceiroTab = ({ entradaId }) => {
                   fullWidth
                   inputProps={{ step: "0.01", min: "0" }}
                   variant="outlined"
+                  size="small"
                 />
               </Grid>
               <Grid item xs={6}>
@@ -533,7 +565,26 @@ const FinanceiroTab = ({ entradaId }) => {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   variant="outlined"
+                  size="small"
                 />
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth variant="outlined" size="small">
+                  <InputLabel>Status da Nota Fiscal</InputLabel>
+                  <Select
+                    name="status_nota_fiscal"
+                    value={formData.status_nota_fiscal}
+                    onChange={handleInputChange}
+                    label="Status da Nota Fiscal"
+                  >
+                    <MenuItem value=""><em>Nenhum</em></MenuItem>
+                    {statusNotaFiscalOptions.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
               )}

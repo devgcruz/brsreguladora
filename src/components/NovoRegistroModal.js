@@ -560,6 +560,19 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
           <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
+              label="RENAVAM"
+              value={formData.renavam}
+              onChange={handleInputChange('renavam')}
+              variant="outlined"
+              size="small"
+              autoComplete="off"
+              sx={fieldSx}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
               label="Cor"
               value={formData.cor}
               onChange={handleInputChange('cor')}

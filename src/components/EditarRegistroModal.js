@@ -499,6 +499,19 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
           <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
+              label="RENAVAM"
+              value={textFieldsData.renavam}
+              onChange={handleTextFieldChange('renavam')}
+              variant="outlined"
+              size="small"
+              autoComplete="off"
+              sx={fieldSx}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              fullWidth
               label="Cor"
               value={textFieldsData.cor}
               onChange={handleTextFieldChange('cor')}
