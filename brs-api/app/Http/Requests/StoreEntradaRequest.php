@@ -22,7 +22,7 @@ class StoreEntradaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ID_COLABORADOR' => 'nullable|exists:tab_login_prestadores,ID_PRESTADOR',
+            'ID_COLABORADOR' => 'nullable|exists:colaboradores,id',
             'DATA_ENTRADA' => 'required|date',
             'MARCA' => 'nullable|string|max:100',
             'VEICULO' => 'nullable|string|max:100',

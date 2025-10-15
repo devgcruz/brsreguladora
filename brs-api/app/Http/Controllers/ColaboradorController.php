@@ -7,6 +7,7 @@ use App\Http\Requests\StoreColaboradorRequest;
 use App\Http\Requests\UpdateColaboradorRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ColaboradorController extends Controller
@@ -82,6 +83,9 @@ class ColaboradorController extends Controller
             
             $colaborador = Colaborador::create($data);
             
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Colaborador cadastrado com sucesso!',
@@ -151,6 +155,9 @@ class ColaboradorController extends Controller
             
             $colaborador->update($data);
             
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Colaborador atualizado com sucesso!',
@@ -187,6 +194,9 @@ class ColaboradorController extends Controller
             
             // Excluir colaborador
             $colaborador->delete();
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,

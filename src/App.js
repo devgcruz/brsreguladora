@@ -29,6 +29,9 @@ import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import PermissionRoute from './components/PermissionRoute';
 
+// Utils
+import './utils/cacheUtils'; // Carrega utilitários de cache globalmente
+
 // Create theme
 const theme = createTheme({
   palette: {

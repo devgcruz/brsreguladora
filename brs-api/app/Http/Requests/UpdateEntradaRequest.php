@@ -27,7 +27,7 @@ class UpdateEntradaRequest extends FormRequest
         \Log::info('🆔 ID da entrada:', ['id' => $this->route('entrada')?->Id_Entrada]);
         
         return [
-            'ID_COLABORADOR' => 'nullable|exists:tab_login_prestadores,ID_PRESTADOR',
+            'ID_COLABORADOR' => 'nullable|exists:colaboradores,id',
             'DATA_ENTRADA' => 'sometimes|date',
             'MARCA' => 'nullable|string|max:100',
             'VEICULO' => 'nullable|string|max:100',

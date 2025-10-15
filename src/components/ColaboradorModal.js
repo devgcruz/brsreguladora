@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import colaboradorService from '../services/colaboradorService';
+import useAppDataStore from '../store/appDataStore';
 
 // Schema de validação com Zod - campos opcionais
 const colaboradorSchema = z.object({
@@ -87,6 +88,9 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
   const [validationErrors, setValidationErrors] = useState({});
+
+  // Hook para acessar o store de dados
+  const { invalidateColaboradoresCache } = useAppDataStore();
 
   const isEditing = !!colaborador;
 
@@ -193,6 +197,10 @@ const ColaboradorModal = ({ open, onClose, colaborador, onSaved }) => {
         message: response.message || `Colaborador ${isEditing ? 'atualizado' : 'cadastrado'} com sucesso!`,
         type: 'success'
       });
+
+      // Invalidar cache de colaboradores para atualizar os dropdowns
+      console.log('🔄 ColaboradorModal: Invalidando cache de colaboradores...');
+      invalidateColaboradoresCache();
 
       // Fechar modal após 1 segundo
       setTimeout(() => {

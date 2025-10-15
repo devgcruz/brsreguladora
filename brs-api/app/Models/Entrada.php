@@ -62,11 +62,15 @@ class Entrada extends Model
     ];
 
     /**
-     * Relacionamento com colaborador (prestador)
+     * CORREÇÃO APLICADA AQUI
+     * Relacionamento com colaborador.
+     * Alterado de Prestador::class para Colaborador::class.
+     * A chave estrangeira 'ID_COLABORADOR' na tabela 'tab_entrada' se conecta
+     * com a chave primária 'id' na tabela 'colaboradores'.
      */
     public function colaborador(): BelongsTo
     {
-        return $this->belongsTo(Prestador::class, 'ID_COLABORADOR', 'ID_PRESTADOR');
+        return $this->belongsTo(Colaborador::class, 'ID_COLABORADOR', 'id');
     }
 
     /**
@@ -110,4 +114,3 @@ class Entrada extends Model
         return $this->hasMany(Observacao::class, 'entrada_id', 'Id_Entrada');
     }
 }
-

@@ -28,7 +28,6 @@ import {
 } from '@mui/icons-material';
 import PdfModal from './PdfModal';
 import FinanceiroTab from './financeiro/FinanceiroTab';
-import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 import { validatePlaca } from '../utils/placaValidator';

@@ -6,6 +6,7 @@ use App\Models\Seguradora;
 use App\Http\Requests\StoreSeguradoraRequest;
 use App\Http\Requests\UpdateSeguradoraRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SeguradoraController extends Controller
 {
@@ -53,6 +54,9 @@ class SeguradoraController extends Controller
         try {
             $data = $request->validated();
             $seguradora = Seguradora::create($data);
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,
@@ -114,6 +118,9 @@ class SeguradoraController extends Controller
             $data = $request->validated();
             $seguradora->update($data);
             
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Seguradora atualizada com sucesso!',
@@ -144,6 +151,9 @@ class SeguradoraController extends Controller
             }
             
             $seguradora->delete();
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,

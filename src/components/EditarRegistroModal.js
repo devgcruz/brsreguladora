@@ -31,7 +31,6 @@ import {
 import PdfModal from './PdfModal';
 import FinanceiroTab from './financeiro/FinanceiroTab';
 import ObservacoesFeed from './ObservacoesFeed';
-import prestadorService from '../services/prestadorService';
 import entradaService from '../services/entradaService';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 import { validatePlaca } from '../utils/placaValidator';

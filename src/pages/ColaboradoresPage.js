@@ -45,6 +45,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import colaboradorService from '../services/colaboradorService';
 import ColaboradorModal from '../components/ColaboradorModal';
+import useAppDataStore from '../store/appDataStore';
 
 const ColaboradoresPage = () => {
   const navigate = useNavigate();
@@ -56,6 +57,9 @@ const ColaboradoresPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState(null);
   const [cnhModal, setCnhModal] = useState({ open: false, colaborador: null, imageUrl: null });
+
+  // Hook para acessar o store de dados
+  const { invalidateColaboradoresCache } = useAppDataStore();
   
   // Estados de paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -159,6 +163,11 @@ const ColaboradoresPage = () => {
     setModalOpen(false);
     setEditingColaborador(null);
     loadColaboradores(); // Recarregar lista
+    
+    // Invalidar cache de colaboradores para atualizar os dropdowns em outros modais
+    console.log('🔄 ColaboradoresPage: Invalidando cache de colaboradores...');
+    invalidateColaboradoresCache();
+    
     setAlert({
       show: true,
       message: 'Colaborador salvo com sucesso!',
@@ -187,6 +196,10 @@ const ColaboradoresPage = () => {
           type: 'success'
         });
         loadColaboradores(); // Recarregar lista
+        
+        // Invalidar cache de colaboradores para atualizar os dropdowns em outros modais
+        console.log('🔄 ColaboradoresPage: Invalidando cache após exclusão...');
+        invalidateColaboradoresCache();
       } else {
         setAlert({
           show: true,

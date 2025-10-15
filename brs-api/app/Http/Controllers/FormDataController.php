@@ -2,70 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Posicao;
+use App\Models\Colaborador; // Certifica-se de que está a usar o Modelo Colaborador
 use App\Models\Marca;
+use App\Models\Posicao;
 use App\Models\Seguradora;
-use App\Models\Colaborador;
-use App\Models\Prestador;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class FormDataController extends Controller
 {
     /**
-     * Retorna todos os dados necessários para popular os formulários de registro
+     * Obter dados unificados para os formulários de registro de entrada.
+     * Este endpoint é otimizado com cache para melhorar o desempenho.
      */
-    public function getRegistroFormData(): JsonResponse
+    public function getRegistroFormData()
     {
-        try {
-            // Buscar todos os dados em paralelo para melhor performance
-            $data = [
-                'posicoes' => Posicao::select('id', 'nome')
-                    ->orderBy('nome')
-                    ->get(),
-                    
-                'marcas' => Marca::select('id', 'nome')
-                    ->orderBy('nome')
-                    ->get(),
-                    
-                'seguradoras' => Seguradora::select('id', 'nome')
-                    ->orderBy('nome')
-                    ->get(),
-                    
-                'colaboradores' => Colaborador::select('id', 'nome')
-                    ->orderBy('nome')
-                    ->get(),
-                    
-                'prestadores' => Prestador::select('ID_PRESTADOR as id', 'NOME as nome')
-                    ->orderBy('NOME')
-                    ->get(),
-            ];
+        // Tenta obter os dados do cache. Se não existirem, executa a função para buscar no banco.
+        $data = Cache::remember('registro_form_data', 60, function () {
+            // A chave 'registro_form_data' identifica este cache.
+            // O número 60 indica que o cache será válido por 60 minutos.
 
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-                'meta' => [
-                    'timestamp' => now(),
-                    'count' => [
-                        'posicoes' => $data['posicoes']->count(),
-                        'marcas' => $data['marcas']->count(),
-                        'seguradoras' => $data['seguradoras']->count(),
-                        'colaboradores' => $data['colaboradores']->count(),
-                        'prestadores' => $data['prestadores']->count(),
-                    ]
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Erro ao buscar dados do formulário:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao carregar dados do formulário',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+            return [
+                'posicoes' => Posicao::orderBy('nome')->get(['id', 'nome']),
+                'marcas' => Marca::orderBy('nome')->get(['id', 'nome']),
+                'seguradoras' => Seguradora::orderBy('nome')->get(['id', 'nome']),
+                
+                // CORREÇÃO APLICADA AQUI:
+                // Buscamos da tabela 'Colaborador' e garantimos que a chave no JSON
+                // seja 'colaboradores', que é o que o frontend espera.
+                'colaboradores' => Colaborador::orderBy('nome')->get(['id', 'nome']),
+            ];
+        });
+
+        // Retorna os dados em formato JSON
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 }

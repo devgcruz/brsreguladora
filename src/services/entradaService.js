@@ -46,17 +46,6 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
 };
 
 const entradaService = {
-  // Verifica se uma placa já existe
-  async checkPlacaExists(placa) {
-    try {
-      const response = await makeAuthenticatedRequest(`/entradas/check-placa?placa=${encodeURIComponent(placa)}`);
-      return response;
-    } catch (error) {
-      console.error('Erro ao verificar placa:', error);
-      throw error;
-    }
-  },
-
   // Retorna lista de entradas com suporte a paginação
   async getEntradas(filtros = {}, pagination = {}) {
     try {
@@ -215,11 +204,11 @@ const entradaService = {
     }
   },
 
-  // Verificar se placa já existe
+  // CORREÇÃO APLICADA AQUI:
+  // Removemos o bloco 'catch' com dados mocados para garantir que a verificação
+  // de placa seja sempre feita através da chamada real à API.
   async checkPlacaExists(placa) {
     try {
-      // Simula verificação de placa duplicada
-      // Em produção, seria uma chamada real à API
       const response = await makeAuthenticatedRequest(`/entradas/check-placa?placa=${encodeURIComponent(placa)}`);
       return {
         success: true,
@@ -227,13 +216,8 @@ const entradaService = {
       };
     } catch (error) {
       console.error('Erro ao verificar placa:', error);
-      // Para desenvolvimento, simula algumas placas existentes
-      const placasExistentes = ['ABC1234', 'XYZ9876', 'DEF5678'];
-      const placaNormalizada = placa.replace(/-/g, '').toUpperCase();
-      return {
-        success: true,
-        exists: placasExistentes.includes(placaNormalizada)
-      };
+      // Em caso de erro, a função agora lança a exceção em vez de retornar um valor falso.
+      throw error;
     }
   },
 
@@ -261,5 +245,3 @@ const entradaService = {
 };
 
 export default entradaService;
-
-

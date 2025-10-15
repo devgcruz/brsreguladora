@@ -35,7 +35,9 @@ return new class extends Migration
             $table->timestamp('DATA_ALTERACAO')->useCurrent()->useCurrentOnUpdate();
             $table->timestamps(); // Adiciona created_at e updated_at
             
-            $table->foreign('ID_COLABORADOR')->references('ID_PRESTADOR')->on('tab_login_prestadores')->onDelete('set null');
+            // A chave estrangeira agora funcionará, pois a tabela 'colaboradores'
+            // será criada antes desta.
+            $table->foreign('ID_COLABORADOR')->references('id')->on('colaboradores')->onDelete('set null');
         });
     }
 
@@ -47,4 +49,3 @@ return new class extends Migration
         Schema::dropIfExists('tab_entrada');
     }
 };
-

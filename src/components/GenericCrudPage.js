@@ -39,6 +39,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import GenericCrudModal from './GenericCrudModal';
+import useAppDataStore from '../store/appDataStore';
 
 const GenericCrudPage = ({ 
   title, 
@@ -52,6 +53,9 @@ const GenericCrudPage = ({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
+
+  // Hook para acessar o store de dados
+  const { invalidateCache } = useAppDataStore();
   
   // Estados de paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -144,6 +148,11 @@ const GenericCrudPage = ({
           message: `${itemName} excluído com sucesso!`,
           type: 'success'
         });
+        
+        // Invalidar cache para atualizar os dropdowns em outros modais
+        console.log(`🔄 GenericCrudPage: Invalidando cache após exclusão de ${itemName}...`);
+        invalidateCache();
+        
         loadItems();
       } else {
         setAlert({
@@ -184,6 +193,11 @@ const GenericCrudPage = ({
             `${itemName} criado com sucesso!`,
           type: 'success'
         });
+        
+        // Invalidar cache para atualizar os dropdowns em outros modais
+        console.log(`🔄 GenericCrudPage: Invalidando cache após ${editingItem ? 'atualização' : 'criação'} de ${itemName}...`);
+        invalidateCache();
+        
         handleCloseModal();
         loadItems();
       } else {

@@ -6,6 +6,7 @@ use App\Models\Posicao;
 use App\Http\Requests\StorePosicaoRequest;
 use App\Http\Requests\UpdatePosicaoRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PosicaoController extends Controller
 {
@@ -53,6 +54,9 @@ class PosicaoController extends Controller
         try {
             $data = $request->validated();
             $posicao = Posicao::create($data);
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,
@@ -114,6 +118,9 @@ class PosicaoController extends Controller
             $data = $request->validated();
             $posicao->update($data);
             
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Posição atualizada com sucesso!',
@@ -144,6 +151,9 @@ class PosicaoController extends Controller
             }
             
             $posicao->delete();
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,

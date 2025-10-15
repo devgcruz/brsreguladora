@@ -100,6 +100,14 @@ const useAppDataStore = create((set, get) => ({
     get().loadDropdownData();
   },
 
+  // Invalidar cache específico de colaboradores
+  invalidateColaboradoresCache: () => {
+    console.log('🗑️ AppDataStore: Invalidando cache de colaboradores...');
+    cacheService.remove('dropdownData');
+    set({ initialized: false, lastUpdated: null });
+    get().loadDropdownData();
+  },
+
   // Forçar recarregamento (ignora cache)
   forceReload: () => {
     console.log('🔄 AppDataStore: Forçando recarregamento...');

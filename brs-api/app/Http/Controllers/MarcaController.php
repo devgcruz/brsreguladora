@@ -6,6 +6,7 @@ use App\Models\Marca;
 use App\Http\Requests\StoreMarcaRequest;
 use App\Http\Requests\UpdateMarcaRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class MarcaController extends Controller
 {
@@ -53,6 +54,9 @@ class MarcaController extends Controller
         try {
             $data = $request->validated();
             $marca = Marca::create($data);
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,
@@ -114,6 +118,9 @@ class MarcaController extends Controller
             $data = $request->validated();
             $marca->update($data);
             
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Marca atualizada com sucesso!',
@@ -144,6 +151,9 @@ class MarcaController extends Controller
             }
             
             $marca->delete();
+            
+            // Invalidar cache de form-data para atualizar os dropdowns
+            Cache::forget('registro_form_data');
             
             return response()->json([
                 'success' => true,
