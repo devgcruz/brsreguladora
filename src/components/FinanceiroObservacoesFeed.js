@@ -36,12 +36,8 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
   
   const { user } = useAuthStore();
 
-  // Debug: Log dos dados do usuário (apenas quando necessário)
-  // console.log('FinanceiroObservacoesFeed - Dados do usuário:', user);
-
   // Função para obter iniciais do nome
   const getInitials = (nome) => {
-    if (!nome) return 'U';
     return nome
       .split(' ')
       .map(word => word.charAt(0))
@@ -57,11 +53,11 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
       const observacoesSeparadas = observacaoAtual.split(' | ').map((obs, index) => ({
         id: `existing-obs-${index}`,
         texto: obs.trim(),
-        autor: user?.nome || 'Usuário Atual',
+        autor: user?.name || 'Usuário Atual',
         data: new Date().toLocaleString('pt-BR'),
         timestamp: new Date().toISOString(),
         usuario: {
-          nome: user?.nome || 'Usuário Atual',
+          nome: user?.name || 'Usuário Atual',
           profile_photo_url: user?.profile_photo_url || null
         }
       })).filter(obs => obs.texto); // Remover observações vazias
@@ -70,7 +66,7 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
     } else {
       setObservacoes([]);
     }
-  }, [observacaoAtual, user?.nome]);
+  }, [observacaoAtual, user?.name]);
 
   // Função para adicionar nova observação
   const adicionarObservacao = useCallback(async () => {
@@ -83,11 +79,11 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
       const novaObs = {
         id: String(Date.now()),
         texto: novaObservacao.trim(),
-        autor: user?.nome || 'Usuário Atual',
+        autor: user?.name || 'Usuário Atual',
         data: new Date().toLocaleString('pt-BR'),
         timestamp: new Date().toISOString(),
         usuario: {
-          nome: user?.nome || 'Usuário Atual',
+          nome: user?.name || 'Usuário Atual',
           profile_photo_url: user?.profile_photo_url || null
         }
       };
@@ -99,8 +95,6 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
         .map(obs => obs.texto.trim())
         .filter(texto => texto)
         .join(' | ');
-      
-      console.log('FinanceiroObservacoesFeed - Observações combinadas:', todasObservacoes);
       onObservacaoChange(todasObservacoes);
 
       setNovaObservacao('');
@@ -114,7 +108,7 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
     } finally {
       setLoading(false);
     }
-  }, [novaObservacao, financeiroId, user?.nome, observacoes, onObservacaoChange]);
+  }, [novaObservacao, financeiroId, user?.name, observacoes, onObservacaoChange]);
 
   // Função para editar observação
   const editarObservacao = useCallback((observacao) => {
@@ -311,10 +305,6 @@ const FinanceiroObservacoesFeed = ({ financeiroId, observacaoAtual, onObservacao
                       bgcolor: 'primary.main',
                       fontSize: '0.75rem',
                       flexShrink: 0
-                    }}
-                    onError={(e) => {
-                      console.log('Erro ao carregar foto do perfil:', obs.usuario?.profile_photo_url);
-                      console.log('Dados do usuário:', obs.usuario);
                     }}
                   >
                     {obs.usuario?.profile_photo_url ? 

@@ -24,7 +24,7 @@ class PdfUploadRequest extends FormRequest
         return [
             'entrada_id' => 'required|integer|exists:tab_entrada,Id_Entrada',
             'descricao' => 'required|string|max:255',
-            'pdf_file' => 'required|file|mimes:pdf|max:10240' // 10MB máximo
+            'pdf_file' => 'required|file|mimes:pdf|max:51200' // 50MB máximo
         ];
     }
 
@@ -43,7 +43,7 @@ class PdfUploadRequest extends FormRequest
             'pdf_file.required' => 'O arquivo PDF é obrigatório.',
             'pdf_file.file' => 'O arquivo deve ser um arquivo válido.',
             'pdf_file.mimes' => 'O arquivo deve ser um PDF.',
-            'pdf_file.max' => 'O arquivo não pode ter mais de 10MB.'
+            'pdf_file.max' => 'O arquivo não pode ter mais de 50MB.'
         ];
     }
 }

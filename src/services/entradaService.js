@@ -28,14 +28,20 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
       throw new Error('Sessão expirada');
     }
     
-    // Tratar erro 422 (Unprocessable Content) - geralmente placa duplicada
+    // Tratar erro 422 (Unprocessable Content) - validação
     if (response.status === 422) {
       try {
         const errorData = await response.json();
+        // Verificar se há erros específicos do Laravel
+        if (errorData.errors) {
+          // Obter primeira mensagem de erro
+          const firstError = Object.values(errorData.errors)[0][0];
+          throw new Error(firstError);
+        }
         const errorMessage = errorData.message || 'Dados inválidos';
         throw new Error(errorMessage);
       } catch (parseError) {
-        throw new Error('Esta placa já está cadastrada no sistema');
+        throw new Error('Erro de validação nos dados enviados');
       }
     }
     
@@ -120,10 +126,15 @@ const entradaService = {
       console.error('Erro ao criar entrada:', error);
       
       // Tratar especificamente erro de placa duplicada
-      if (error.message.includes('placa') || error.message.includes('Placa')) {
+      const isPlacaError = error.message && (
+        error.message.includes('já está cadastrada') || 
+        error.message.includes('placa') && error.message.includes('cadastrada')
+      );
+      
+      if (isPlacaError) {
         return {
           success: false,
-          message: 'Esta placa já está cadastrada no sistema. Por favor, verifique a placa e tente novamente.',
+          message: error.message,
           errorType: 'placa_duplicada'
         };
       }
@@ -152,10 +163,15 @@ const entradaService = {
       console.error('Erro ao atualizar entrada:', error);
       
       // Tratar especificamente erro de placa duplicada
-      if (error.message.includes('placa') || error.message.includes('Placa')) {
+      const isPlacaError = error.message && (
+        error.message.includes('já está cadastrada') || 
+        error.message.includes('placa') && error.message.includes('cadastrada')
+      );
+      
+      if (isPlacaError) {
         return {
           success: false,
-          message: 'Esta placa já está cadastrada no sistema. Por favor, verifique a placa e tente novamente.',
+          message: error.message,
           errorType: 'placa_duplicada'
         };
       }

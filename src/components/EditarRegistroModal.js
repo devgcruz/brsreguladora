@@ -116,12 +116,23 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
   useEffect(() => {
     if (open && registroData) {
       // Preencher valores dos dropdowns de UF/Cidade
+      // Para o colaborador, buscar o objeto completo da lista de colaboradores
+      let colaboradorInicial = '';
+      if (registroData.colaborador_id && colaboradores.length > 0) {
+        const colaboradorExistente = colaboradores.find(
+          c => c.id === registroData.colaborador_id
+        );
+        if (colaboradorExistente) {
+          colaboradorInicial = colaboradorExistente;
+        }
+      }
+      
       setDropdownValues({
         ufSinistro: String(registroData.uf_sinistro || ''),
         cidadeSinistro: String(registroData.cidade_sinistro || ''),
         uf: String(registroData.uf || ''),
         cidade: String(registroData.cidade || ''),
-        colaborador: registroData.colaborador?.nome || registroData.colaborador?.NOME || ''
+        colaborador: colaboradorInicial
       });
 
       // O modal cuida dos campos de texto
@@ -165,7 +176,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         colaborador: ''
       });
     }
-  }, [open, registroData]);
+  }, [open, registroData, colaboradores]);
 
 
   // Função para validar formato da placa
@@ -243,7 +254,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       }
       
     } catch (err) {
-      console.error('Erro ao excluir registro:', err);
       setError(err.message || 'Erro ao excluir registro');
     } finally {
       setDeleting(false);
@@ -273,10 +283,20 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       }
 
       // Preparar dados para a API
+      // Obter ID do colaborador diretamente do objeto armazenado em dropdownValues
+      const colaboradorId = dropdownValues.colaborador && typeof dropdownValues.colaborador === 'object' 
+        ? dropdownValues.colaborador.id 
+        : null;
+      
+      // Helper para extrair nome quando valor é objeto
+      const getValue = (value) => {
+        return typeof value === 'object' && value !== null ? value.nome : value;
+      };
+      
       const dadosParaAPI = {
-        ID_COLABORADOR: finalData.colaborador ? colaboradores.find(c => c && c.label === finalData.colaborador)?.id : null,
+        ID_COLABORADOR: colaboradorId,
         DATA_ENTRADA: finalData.entrada,
-        MARCA: finalData.marca,
+        MARCA: getValue(finalData.marca),
         VEICULO: finalData.veiculo,
         PLACA: finalData.placa,
         CHASSI: finalData.chassi,
@@ -285,8 +305,8 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
         NUM_BO: finalData.numeroBO,
         UF_SINISTRO: finalData.ufSinistro,
         CIDADE_SINISTRO: finalData.cidadeSinistro,
-        SEGURADORA: finalData.seguradora,
-        POSICAO: finalData.posicao,
+        SEGURADORA: getValue(finalData.seguradora),
+        POSICAO: getValue(finalData.posicao),
         SITUACAO: finalData.situacao,
         UF: finalData.uf,
         CIDADE: finalData.cidade,
@@ -340,7 +360,6 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
       }
       
     } catch (err) {
-      console.error('Erro ao atualizar registro:', err);
       setError(err.message || 'Erro ao atualizar registro');
     } finally {
       // Salvamento concluído
@@ -625,7 +644,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
               name="colaborador"
               label="Colaborador"
               value={dropdownValues.colaborador || ""}
-              onChange={(value) => handleDropdownChange('colaborador', value)}
+              onChange={(event) => handleDropdownChange('colaborador', event.target.value)}
               options={colaboradores}
               loading={loadingDropdowns}
             />
@@ -987,7 +1006,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             py: { xs: 1, sm: 1.5 }
           }}
         >
-          Anexar Documentos
+          Documentos
         </Button>
 
         {/* Botões de ação no canto direito */}

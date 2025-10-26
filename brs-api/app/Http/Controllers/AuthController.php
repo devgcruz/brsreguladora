@@ -24,10 +24,15 @@ class AuthController extends Controller
 
         $usuario = Usuario::where('Usuario', $credentials['usuario'])->first();
         
-        \Log::info('👤 Usuário e/ou senha não encontrado', ['status' => 'Não encontrado']);
+        if (!$usuario) {
+            \Log::info('👤 Usuário não encontrado', ['usuario' => $credentials['usuario']]);
+            throw ValidationException::withMessages([
+                'usuario' => ['As credenciais fornecidas estão incorretas.'],
+            ]);
+        }
 
-        if (!$usuario || !Hash::check($credentials['senha'], $usuario->Senha)) {
-
+        if (!Hash::check($credentials['senha'], $usuario->Senha)) {
+            \Log::info('🔒 Senha incorreta', ['usuario' => $credentials['usuario']]);
             throw ValidationException::withMessages([
                 'usuario' => ['As credenciais fornecidas estão incorretas.'],
             ]);

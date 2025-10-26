@@ -10,12 +10,24 @@ const GenericAutocomplete = ({
   name,
   loading,
   getOptionLabel = (option) => option.nome || '',
-  isOptionEqualToValue = (option, value) => option.id === value.id,
+  isOptionEqualToValue = (option, value) => {
+    if (!option || !value) return false;
+    if (typeof option === 'string' || typeof value === 'string') return option === value;
+    return option.id === value.id;
+  },
   error,
   helperText
 }) => {
-  // Encontra o objeto da opção selecionada com base no valor (que pode ser apenas o ID)
-  const selectedOption = options.find(option => option.nome === value) || null;
+  // Encontra o objeto da opção selecionada com base no valor (que pode ser objeto ou string)
+  const selectedOption = (() => {
+    if (!value || value === '') return null;
+    if (typeof value === 'object' && value.id) {
+      // Se value é um objeto, buscar pelo ID
+      return options.find(option => option.id === value.id) || null;
+    }
+    // Se value é string, buscar pelo nome
+    return options.find(option => option.nome === value) || null;
+  })();
 
   return (
     <Autocomplete
@@ -23,11 +35,11 @@ const GenericAutocomplete = ({
       getOptionLabel={getOptionLabel}
       value={selectedOption}
       onChange={(event, newValue) => {
-        // Simula o evento para o handleChange do formulário
+        // Retorna o objeto completo do colaborador (id, nome) para permitir buscar pelo ID mais tarde
         const simulatedEvent = {
           target: {
             name: name,
-            value: newValue ? newValue.nome : '',
+            value: newValue ? newValue : null, // Retorna o objeto completo {id, nome}
           },
         };
         onChange(simulatedEvent);

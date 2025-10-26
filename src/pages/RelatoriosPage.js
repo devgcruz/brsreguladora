@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
-const RelatoriosPage = ({ initialTab = 0 }) => {
-  const [activeTab, setActiveTab] = useState(initialTab);
+const RelatoriosPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
 
   // Dados mocados para relatório de Entrada
   const entradaRows = [

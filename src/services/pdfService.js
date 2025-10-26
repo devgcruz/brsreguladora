@@ -187,10 +187,10 @@ const pdfService = {
       errors.push('Apenas arquivos PDF são permitidos');
     }
 
-    // Verificar tamanho (10MB máximo)
-    const maxSize = 10 * 1024 * 1024; // 10MB em bytes
+    // Verificar tamanho (50MB máximo)
+    const maxSize = 50 * 1024 * 1024; // 50MB em bytes
     if (file.size > maxSize) {
-      errors.push('Arquivo muito grande. Tamanho máximo: 10MB');
+      errors.push('Arquivo muito grande. Tamanho máximo: 50MB');
     }
 
     // Verificar se o arquivo não está vazio

@@ -24,7 +24,6 @@ const useAppDataStore = create((set, get) => ({
     
     // Evitar múltiplas chamadas simultâneas
     if (loading) {
-      console.log('🔄 AppDataStore: Já carregando dados, ignorando...');
       return;
     }
 
@@ -33,7 +32,6 @@ const useAppDataStore = create((set, get) => ({
     const cachedData = cacheService.get(cacheKey);
     
     if (cachedData && cacheService.isValid(cacheKey, 60 * 60 * 1000)) { // 60 minutos
-      console.log('✅ AppDataStore: Dados encontrados no cache');
       set({
         dropdownData: cachedData.data,
         lastUpdated: cachedData.metadata.timestamp,
@@ -43,7 +41,6 @@ const useAppDataStore = create((set, get) => ({
       return;
     }
 
-    console.log('🚀 AppDataStore: Carregando dados da API...');
     set({ loading: true, error: null });
 
     try {
@@ -71,19 +68,10 @@ const useAppDataStore = create((set, get) => ({
           initialized: true,
           error: null
         });
-        
-        console.log('✅ AppDataStore: Dados carregados com sucesso', {
-          posicoes: data.posicoes?.length || 0,
-          marcas: data.marcas?.length || 0,
-          seguradoras: data.seguradoras?.length || 0,
-          colaboradores: data.colaboradores?.length || 0,
-          prestadores: data.prestadores?.length || 0,
-        });
       } else {
         throw new Error(response.message || 'Erro ao carregar dados');
       }
     } catch (error) {
-      console.error('❌ AppDataStore: Erro ao carregar dados:', error);
       set({
         loading: false,
         error: error.message,
@@ -94,7 +82,6 @@ const useAppDataStore = create((set, get) => ({
 
   // Invalidar cache e recarregar dados
   invalidateCache: () => {
-    console.log('🗑️ AppDataStore: Invalidando cache...');
     cacheService.remove('dropdownData');
     set({ initialized: false, lastUpdated: null });
     get().loadDropdownData();
@@ -102,7 +89,6 @@ const useAppDataStore = create((set, get) => ({
 
   // Invalidar cache específico de colaboradores
   invalidateColaboradoresCache: () => {
-    console.log('🗑️ AppDataStore: Invalidando cache de colaboradores...');
     cacheService.remove('dropdownData');
     set({ initialized: false, lastUpdated: null });
     get().loadDropdownData();
@@ -110,7 +96,6 @@ const useAppDataStore = create((set, get) => ({
 
   // Forçar recarregamento (ignora cache)
   forceReload: () => {
-    console.log('🔄 AppDataStore: Forçando recarregamento...');
     cacheService.remove('dropdownData');
     set({ initialized: false, lastUpdated: null, loading: false });
     get().loadDropdownData();

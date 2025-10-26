@@ -39,15 +39,21 @@ class ProfileController extends Controller
         $usuario = $request->user();
 
         $request->validate([
-            'nome' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:usuarios,email,' . $usuario->id,
+            'nome' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:usuarios,email,' . $usuario->id,
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $data = [
-            'nome' => $request->nome,
-            'email' => $request->email
-        ];
+        $data = [];
+
+        // Atualizar nome e email apenas se fornecidos
+        if ($request->has('nome')) {
+            $data['nome'] = $request->nome;
+        }
+        
+        if ($request->has('email')) {
+            $data['email'] = $request->email;
+        }
 
         // Upload da nova foto de perfil se fornecida
         if ($request->hasFile('profile_photo')) {
@@ -88,6 +94,7 @@ class ProfileController extends Controller
         $request->validate([
             'current_password' => 'required',
             'new_password' => ['required', 'confirmed', Password::min(8)],
+            'new_password_confirmation' => 'required'
         ]);
 
         // Verificar senha atual

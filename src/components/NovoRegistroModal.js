@@ -13,12 +13,9 @@ import {
   CircularProgress,
   Snackbar,
   Skeleton,
-  Tabs,
-  Tab,
   Autocomplete,
 } from '@mui/material';
 import BlurredDialog from './BlurredDialog';
-import OptimizedSelect from './OptimizedSelect';
 import GenericAutocomplete from './GenericAutocomplete';
 import UfCidadeDropdown from './UfCidadeDropdown';
 import {
@@ -27,7 +24,6 @@ import {
   AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import PdfModal from './PdfModal';
-import FinanceiroTab from './financeiro/FinanceiroTab';
 import entradaService from '../services/entradaService';
 import useRegistroEntradaDropdowns from '../hooks/useRegistroEntradaDropdowns';
 import { validatePlaca } from '../utils/placaValidator';
@@ -51,11 +47,6 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
     severity: 'error'
   });
   const [isReady, setIsReady] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
   
   // Hook para dados dinâmicos dos selects
   const {
@@ -186,7 +177,6 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
         }));
       }
     } catch (error) {
-      console.error('Erro ao validar placa:', error);
       setPlacaSnackbar({
         open: true,
         message: 'Erro ao verificar placa. Tente novamente.',
@@ -273,10 +263,20 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
       }
 
       // Preparar dados para a API
+      // Obter ID do colaborador diretamente do objeto armazenado
+      const colaboradorId = formData.colaborador && typeof formData.colaborador === 'object' 
+        ? formData.colaborador.id 
+        : null;
+      
+      // Helper para extrair nome quando valor é objeto
+      const getValue = (value) => {
+        return typeof value === 'object' && value !== null ? value.nome : value;
+      };
+
       const dadosParaAPI = {
-        ID_COLABORADOR: formData.colaborador ? colaboradores.find(c => c && c.label === formData.colaborador)?.id : null,
+        ID_COLABORADOR: colaboradorId,
         DATA_ENTRADA: formData.entrada,
-        MARCA: formData.marca,
+        MARCA: getValue(formData.marca),
         VEICULO: formData.veiculo,
         PLACA: formData.placa,
         CHASSI: formData.chassi,
@@ -285,8 +285,8 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
         NUM_BO: formData.numeroBO,
         UF_SINISTRO: formData.ufSinistro,
         CIDADE_SINISTRO: formData.cidadeSinistro,
-        SEGURADORA: formData.seguradora,
-        POSICAO: formData.posicao,
+        SEGURADORA: getValue(formData.seguradora),
+        POSICAO: getValue(formData.posicao),
         SITUACAO: formData.situacao,
         UF: formData.uf,
         CIDADE: formData.cidade,
@@ -987,26 +987,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
 
         {isReady ? (
           <Box>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs value={activeTab} onChange={handleTabChange} aria-label="abas do registro">
-                <Tab label="Dados do Registro" />
-                <Tab label="Financeiro" />
-              </Tabs>
-            </Box>
-            
-            <Box sx={{ mt: 2 }}>
-              {activeTab === 0 && renderFormContent()}
-              {activeTab === 1 && savedEntradaId && (
-                <FinanceiroTab entradaId={savedEntradaId} />
-              )}
-              {activeTab === 1 && !savedEntradaId && (
-                <Box textAlign="center" p={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Salve o registro primeiro para gerenciar os lançamentos financeiros.
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+            {renderFormContent()}
           </Box>
         ) : (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%" minHeight="400px">
@@ -1044,7 +1025,7 @@ const NovoRegistroModal = ({ open, onClose, onSave }) => {
             fontSize: { xs: '0.8rem', sm: '0.875rem' }
           }}
         >
-          {!savedEntradaId ? 'Salve primeiro o registro' : 'Anexar Documentos'}
+          {!savedEntradaId ? 'Salve primeiro o registro' : 'Documentos'}
         </Button>
 
         {/* Botões de ação no canto direito */}

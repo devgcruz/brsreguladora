@@ -6,8 +6,6 @@ const authService = {
   // Login real com a API
   async login(username, password) {
     try {
-      console.log('🔐 Tentando login:', { username, apiUrl: API_BASE_URL });
-      
       // Adicionar timeout para evitar travamento
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
@@ -27,29 +25,56 @@ const authService = {
 
       clearTimeout(timeoutId);
 
-      console.log('📡 Resposta da API:', response.status, response.statusText);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Erro na resposta:', errorText);
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('📦 Dados recebidos:', data);
 
       if (data.success) {
         // Salvar token no localStorage
         localStorage.setItem('auth_token', data.data.token);
         localStorage.setItem('user_data', JSON.stringify(data.data.user));
-        console.log('✅ Login realizado com sucesso!');
         return data;
       } else {
-        console.error('❌ Login falhou:', data.message);
         throw new Error(data.message || 'Erro no login');
       }
     } catch (error) {
-      console.error('💥 Erro no login:', error);
+      throw new Error(error.message || 'Erro de conexão com o servidor');
+    }
+  },
+
+  // Registro de novo usuário
+  async register(userData) {
+    try {
+      // Adicionar timeout para evitar travamento
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
+
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(userData),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        return data;
+      } else {
+        throw new Error(data.message || 'Erro no registro');
+      }
+    } catch (error) {
       throw new Error(error.message || 'Erro de conexão com o servidor');
     }
   },
@@ -69,7 +94,7 @@ const authService = {
         });
       }
     } catch (error) {
-      console.error('Erro no logout:', error);
+      // Erro silencioso no logout
     } finally {
       // Limpar dados locais
       localStorage.removeItem('auth_token');
@@ -83,12 +108,9 @@ const authService = {
       const token = localStorage.getItem('auth_token');
       
       if (!token) {
-        console.log('🔍 AuthService: Nenhum token encontrado');
         return null;
       }
 
-      console.log('📡 AuthService: Verificando usuário atual...');
-      
       // Adicionar timeout para evitar travamento
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
@@ -103,26 +125,20 @@ const authService = {
 
       clearTimeout(timeoutId);
 
-      console.log('📡 AuthService: Resposta /me:', response.status);
-
       if (!response.ok) {
-        console.log('❌ AuthService: Token inválido, limpando dados...');
         this.logout();
         return null;
       }
 
       const data = await response.json();
-      console.log('📦 AuthService: Dados do usuário:', data);
       
       if (data.success) {
         return data.data;
       } else {
-        console.log('❌ AuthService: Resposta não bem-sucedida, limpando dados...');
         this.logout();
         return null;
       }
     } catch (error) {
-      console.error('💥 AuthService: Erro ao obter usuário:', error);
       this.logout();
       return null;
     }
@@ -158,7 +174,6 @@ const authService = {
       const data = await response.json();
       return data.success && data.data.has_permission;
     } catch (error) {
-      console.error('Erro ao verificar permissão:', error);
       return false;
     }
   }

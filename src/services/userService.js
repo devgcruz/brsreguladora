@@ -252,6 +252,41 @@ class UserService {
     }
   }
 
+  // Atualizar perfil do usuário atual
+  async updateProfile(userData) {
+    try {
+      const response = await makeAuthenticatedRequest('/profile', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
+      
+      // Atualizar dados do usuário atual no localStorage
+      const updatedUser = response.data;
+      localStorage.setItem('user_data', JSON.stringify(updatedUser));
+      this.currentUser = updatedUser;
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
+    }
+  }
+
+  // Alterar senha do usuário atual
+  async changePassword(passwordData) {
+    try {
+      const response = await makeAuthenticatedRequest('/profile/change-password', {
+        method: 'POST',
+        body: JSON.stringify(passwordData)
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      throw error;
+    }
+  }
+
   // Obter usuário atual
   getCurrentUser() {
     return this.currentUser;

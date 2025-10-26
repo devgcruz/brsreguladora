@@ -23,7 +23,6 @@ import ColaboradoresPage from './pages/ColaboradoresPage';
 import PosicoesPage from './pages/PosicoesPage';
 import MarcasPage from './pages/MarcasPage';
 import SeguradorasPage from './pages/SeguradorasPage';
-import DashboardAnalyticsPage from './pages/DashboardAnalyticsPage';
 
 // Components
 import DashboardLayout from './components/DashboardLayout';
@@ -73,7 +72,6 @@ function App() {
   useEffect(() => {
     // Inicializar autenticação apenas uma vez
     if (!initialized && !isInitializing) {
-      console.log('🚀 App: Inicializando autenticação...');
       init();
     }
   }, [initialized, isInitializing, init]);
@@ -81,7 +79,6 @@ function App() {
   useEffect(() => {
     // Inicializar dados dos dropdowns quando autenticado
     if (isAuthenticated) {
-      console.log('🚀 App: Inicializando dados dos dropdowns...');
       loadDropdownData();
     }
   }, [isAuthenticated, loadDropdownData]);
@@ -117,14 +114,6 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <DashboardPage />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/dashboard/analytics" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <DashboardAnalyticsPage />
               </DashboardLayout>
             </ProtectedRoute>
           } />

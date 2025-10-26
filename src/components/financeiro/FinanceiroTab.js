@@ -92,7 +92,6 @@ const FinanceiroTab = ({ entradaId }) => {
   };
 
   useEffect(() => {
-    console.log('FinanceiroTab - entradaId recebido:', entradaId);
     if (entradaId) {
       fetchFinanceiros();
     }
@@ -101,13 +100,10 @@ const FinanceiroTab = ({ entradaId }) => {
   const fetchFinanceiros = async () => {
     try {
       setLoading(true);
-      console.log('FinanceiroTab - Buscando financeiros para entradaId:', entradaId);
       const response = await financeiroService.getFinanceirosByEntrada(entradaId);
-      console.log('FinanceiroTab - Resposta da API:', response);
       setFinanceiros(response.data || []);
     } catch (error) {
       setError('Erro ao carregar lançamentos financeiros');
-      console.error('Erro ao carregar financeiros:', error);
     } finally {
       setLoading(false);
     }
@@ -143,9 +139,6 @@ const FinanceiroTab = ({ entradaId }) => {
     try {
       setLoading(true);
       
-      // Debug: Log dos dados que serão enviados
-      console.log('FinanceiroTab - Dados do formulário:', formData);
-      
       if (editingFinanceiro) {
         await financeiroService.updateFinanceiro(editingFinanceiro.id, formData);
         setSuccess('Lançamento financeiro atualizado com sucesso!');
@@ -159,15 +152,12 @@ const FinanceiroTab = ({ entradaId }) => {
       fetchFinanceiros();
     } catch (error) {
       setError('Erro ao salvar lançamento financeiro');
-      console.error('Erro ao salvar financeiro:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = (financeiro) => {
-    console.log('FinanceiroTab - Editando financeiro:', financeiro);
-    
     setEditingFinanceiro(financeiro);
     setFormData({
       NUMERO_RECIBO: financeiro.numero_recibo || '',
@@ -214,7 +204,6 @@ const FinanceiroTab = ({ entradaId }) => {
       setFinanceiroToDelete(null);
     } catch (error) {
       setError('Erro ao excluir lançamento financeiro');
-      console.error('Erro ao excluir financeiro:', error);
     } finally {
       setLoading(false);
     }
@@ -237,7 +226,6 @@ const FinanceiroTab = ({ entradaId }) => {
       );
     } catch (error) {
       setError('Erro ao atualizar status do lançamento');
-      console.error('Erro ao atualizar status:', error);
     } finally {
       setLoading(false);
     }
@@ -594,7 +582,6 @@ const FinanceiroTab = ({ entradaId }) => {
                   financeiroId={editingFinanceiro?.id}
                   observacaoAtual={formData.OBSERVACOES}
                   onObservacaoChange={(observacao) => {
-                    console.log('FinanceiroTab - Observação alterada:', observacao);
                     setFormData(prev => ({ ...prev, OBSERVACOES: observacao }));
                   }}
                 />

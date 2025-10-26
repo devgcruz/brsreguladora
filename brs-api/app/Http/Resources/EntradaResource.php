@@ -19,14 +19,11 @@ class EntradaResource extends JsonResource
             'colaborador_id' => $this->ID_COLABORADOR,
             'colaborador' => $this->whenLoaded('colaborador', function () {
                 return [
-                    'id' => $this->colaborador->ID_PRESTADOR,
-                    'nome' => $this->colaborador->NOME,
-                    'login' => $this->colaborador->LOGIN,
-                    'parceiro' => $this->colaborador->parceiro ? [
-                        'id' => $this->colaborador->parceiro->ID_PARCEIRO,
-                        'nome' => $this->colaborador->parceiro->NOME,
-                        'status' => $this->colaborador->parceiro->STATUS
-                    ] : null
+                    'id' => $this->colaborador->id,
+                    'nome' => $this->colaborador->nome,
+                    'cpf' => $this->colaborador->cpf,
+                    'email' => $this->colaborador->email,
+                    'celular' => $this->colaborador->celular
                 ];
             }),
             'data_entrada' => $this->DATA_ENTRADA?->format('Y-m-d'),
