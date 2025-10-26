@@ -1,29 +1,12 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
   Paper,
   Typography,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider
+  CircularProgress
 } from '@mui/material';
-import {
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Assessment as AssessmentIcon,
-  AttachMoney as AttachMoneyIcon,
-  DirectionsCar as DirectionsCarIcon,
-  Schedule as ScheduleIcon
-} from '@mui/icons-material';
-import StatCard from '../components/StatCard';
+
 import {
   PieChart,
   Pie,
@@ -41,73 +24,62 @@ import {
   Area,
   ResponsiveContainer
 } from 'recharts';
+import dashboardService from '../services/dashboardService';
 
-const DashboardPage = memo(() => {
-  const [loading, setLoading] = useState(false);
+const DashboardPage = () => {
+  const [loading, setLoading] = useState(true);
+  const [dadosMontadoras, setDadosMontadoras] = useState([]);
+  const [dadosTipoServico, setDadosTipoServico] = useState([]);
+  const [dadosSituacao, setDadosSituacao] = useState([]);
+  const [dadosEvolucaoEntradas, setDadosEvolucaoEntradas] = useState([]);
+  const [dadosEvolucaoHonorarios, setDadosEvolucaoHonorarios] = useState([]);
+  const [dadosEvolucaoDespesas, setDadosEvolucaoDespesas] = useState([]);
 
-  // Dados dos gráficos memoizados para performance
-  const dadosMontadoras = useMemo(() => [
-    { name: 'Toyota', value: 35, color: '#8884d8' },
-    { name: 'Honda', value: 25, color: '#82ca9d' },
-    { name: 'Volkswagen', value: 20, color: '#ffc658' },
-    { name: 'Ford', value: 12, color: '#ff7300' },
-    { name: 'Chevrolet', value: 8, color: '#00ff00' }
-  ], []);
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        setLoading(true);
+        
+        // Buscar todos os dados em paralelo
+        const [
+          montadoras,
+          tipoServico,
+          situacao,
+          evolucaoEntradas,
+          evolucaoHonorarios,
+          evolucaoDespesas
+        ] = await Promise.all([
+          dashboardService.getDadosMontadoras(),
+          dashboardService.getDadosTipoServico(),
+          dashboardService.getDadosSituacao(),
+          dashboardService.getDadosEvolucaoEntradas(),
+          dashboardService.getDadosEvolucaoHonorarios(),
+          dashboardService.getDadosEvolucaoDespesas()
+        ]);
 
-  const dadosTipoServico = useMemo(() => [
-    { name: 'Colisão', value: 45, color: '#8884d8' },
-    { name: 'Roubo', value: 25, color: '#82ca9d' },
-    { name: 'Incêndio', value: 15, color: '#ffc658' },
-    { name: 'Furto', value: 10, color: '#ff7300' },
-    { name: 'Enchente', value: 5, color: '#00ff00' }
-  ], []);
+        setDadosMontadoras(montadoras);
+        setDadosTipoServico(tipoServico);
+        setDadosSituacao(situacao);
+        setDadosEvolucaoEntradas(evolucaoEntradas);
+        setDadosEvolucaoHonorarios(evolucaoHonorarios);
+        setDadosEvolucaoDespesas(evolucaoDespesas);
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const dadosSituacao = useMemo(() => [
-    { name: 'Em análise', value: 8, color: '#8884d8' },
-    { name: 'Em reparo', value: 12, color: '#82ca9d' },
-    { name: 'Aguardando peças', value: 5, color: '#ffc658' },
-    { name: 'Finalizado', value: 15, color: '#ff7300' },
-    { name: 'Aguardando liberação', value: 3, color: '#00ff00' }
-  ], []);
+    carregarDados();
+  }, []);
 
-  const dadosEvolucaoEntradas = useMemo(() => [
-    { mes: 'Jan', entradas: 15 },
-    { mes: 'Fev', entradas: 18 },
-    { mes: 'Mar', entradas: 22 },
-    { mes: 'Abr', entradas: 19 },
-    { mes: 'Mai', entradas: 25 },
-    { mes: 'Jun', entradas: 28 }
-  ], []);
-
-  const dadosEvolucaoHonorarios = useMemo(() => [
-    { mes: 'Jan', honorarios: 45000 },
-    { mes: 'Fev', honorarios: 52000 },
-    { mes: 'Mar', honorarios: 48000 },
-    { mes: 'Abr', honorarios: 55000 },
-    { mes: 'Mai', honorarios: 62000 },
-    { mes: 'Jun', honorarios: 58000 }
-  ], []);
-
-  const dadosEvolucaoDespesas = useMemo(() => [
-    { mes: 'Jan', despesas: 12000 },
-    { mes: 'Fev', despesas: 15000 },
-    { mes: 'Mar', despesas: 18000 },
-    { mes: 'Abr', despesas: 14000 },
-    { mes: 'Mai', despesas: 20000 },
-    { mes: 'Jun', despesas: 22000 }
-  ], []);
-
-  // Dados dos cards de estatísticas
-  const dashboardStats = useMemo(() => ({
-    totalVeiculos: 156,
-    emAnalise: 23,
-    finalizados: 89,
-    pendentes: 44,
-    honorariosMes: 99999,
-    despesasMes: 44444,
-    lucroMes: 99999
-  }), []);
-
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -118,45 +90,6 @@ const DashboardPage = memo(() => {
       <Typography variant="body1" color="text.secondary" paragraph>
         Indicadores e análises do sistema.
       </Typography>
-
-      {/* Cards de Estatísticas */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total de Veículos"
-            value={dashboardStats.totalVeiculos}
-            icon={<DirectionsCarIcon />}
-            color="primary.main"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Em Análise"
-            value={dashboardStats.emAnalise}
-            icon={<ScheduleIcon />}
-            color="warning.main"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Finalizados"
-            value={dashboardStats.finalizados}
-            icon={<AssessmentIcon />}
-            color="success.main"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Lucro do Mês"
-            value={`R$ ${dashboardStats.lucroMes.toLocaleString()}`}
-            icon={<AttachMoneyIcon />}
-            color="info.main"
-          />
-        </Grid>
-      </Grid>
 
       {/* Gráficos */}
       <Grid container spacing={3}>
@@ -263,7 +196,7 @@ const DashboardPage = memo(() => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="mes" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`R$ ${value.toLocaleString()}`, 'Honorários']} />
+                <Tooltip formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Honorários']} />
                 <Bar dataKey="honorarios" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
@@ -281,7 +214,7 @@ const DashboardPage = memo(() => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="mes" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`R$ ${value.toLocaleString()}`, 'Despesas']} />
+                <Tooltip formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Despesas']} />
                 <Area type="monotone" dataKey="despesas" stroke="#ffc658" fill="#ffc658" />
               </AreaChart>
             </ResponsiveContainer>
@@ -290,7 +223,7 @@ const DashboardPage = memo(() => {
       </Grid>
     </Box>
   );
-});
+};
 
-export default memo(DashboardPage);
+export default DashboardPage;
 
