@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tab_entrada', function (Blueprint $table) {
-            $table->string('PROTOCOLO', 50)->nullable()->after('TIPO');
+        Schema::create('colaboradores', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tab_entrada', function (Blueprint $table) {
-            $table->dropColumn('PROTOCOLO');
-        });
+        Schema::dropIfExists('colaboradores');
     }
 };

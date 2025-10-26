@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -63,9 +62,7 @@ class AuthController extends Controller
                     'permissoes' => $usuario->permissoes,
                     'status' => $usuario->status,
                     'ultimo_acesso' => $usuario->ultimo_acesso,
-                    'profile_photo_path' => $usuario->profile_photo_path,
-                    'profile_photo_url' => $usuario->profile_photo_path ? 
-                        url('storage/' . $usuario->profile_photo_path) : null
+                    'profile_photo_path' => $usuario->profile_photo_path
                 ],
                 'token' => $token
             ]
@@ -106,9 +103,7 @@ class AuthController extends Controller
                 'permissoes' => $usuario->permissoes,
                 'status' => $usuario->status,
                 'ultimo_acesso' => $usuario->ultimo_acesso,
-                'profile_photo_path' => $usuario->profile_photo_path,
-                'profile_photo_url' => $usuario->profile_photo_path ? 
-                    url('storage/' . $usuario->profile_photo_path) : null
+                'profile_photo_path' => $usuario->profile_photo_path
             ]
         ]);
     }

@@ -31,6 +31,7 @@ const RegistrosPage = () => {
   const [filteredEntradas, setFilteredEntradas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -77,21 +78,33 @@ const RegistrosPage = () => {
     }
   }, [pagination.currentPage, pagination.perPage]); // Dependências de paginação
 
-  const filterEntradas = () => {
+  const filterEntradas = async () => {
     if (!searchTerm.trim()) {
+      // Quando não há busca, mostrar os registros da página atual
       setFilteredEntradas(entradas);
       return;
     }
 
-    const filtered = entradas.filter(entrada =>
-      String(entrada.placa || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.veiculo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.marca || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.seguradora || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.posicao || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(entrada.situacao || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredEntradas(filtered);
+    try {
+      setSearching(true);
+      // Buscar em todo o banco de dados usando o parâmetro search
+      const response = await entradaService.getEntradas(
+        { search: searchTerm }, 
+        { page: 1, per_page: 1000 } // Buscar até 1000 registros
+      );
+      
+      if (response.success) {
+        setFilteredEntradas(response.data);
+      } else {
+        setError('Erro ao buscar registros');
+        setFilteredEntradas([]);
+      }
+    } catch (err) {
+      setError('Erro ao buscar registros');
+      setFilteredEntradas([]);
+    } finally {
+      setSearching(false);
+    }
   };
 
   useEffect(() => {
@@ -99,8 +112,26 @@ const RegistrosPage = () => {
   }, []); // Executa apenas uma vez na montagem
 
   useEffect(() => {
-    filterEntradas();
-  }, [searchTerm, entradas]);
+    const timeoutId = setTimeout(() => {
+      filterEntradas();
+    }, 500); // Debounce de 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // Atualizar filteredEntradas quando entradas mudam (nova página carregada)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredEntradas(entradas);
+    }
+  }, [entradas, searchTerm]);
+
+  // Inicializar filteredEntradas com entradas quando a página carrega
+  useEffect(() => {
+    if (entradas.length > 0 && filteredEntradas.length === 0 && !searchTerm.trim()) {
+      setFilteredEntradas(entradas);
+    }
+  }, [entradas, filteredEntradas.length, searchTerm]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -432,6 +463,11 @@ const RegistrosPage = () => {
                 <SearchIcon />
               </InputAdornment>
             ),
+            endAdornment: searching && (
+              <InputAdornment position="end">
+                <CircularProgress size={20} />
+              </InputAdornment>
+            ),
           }}
         />
       </Box>
@@ -439,6 +475,12 @@ const RegistrosPage = () => {
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+
+      {searchTerm && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          🔍 Buscando em todo o banco de dados por: "{searchTerm}"
         </Alert>
       )}
 

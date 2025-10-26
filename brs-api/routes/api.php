@@ -16,6 +16,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\SeguradoraController;
 use App\Http\Controllers\ObservacaoController;
 use App\Http\Controllers\FormDataController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dados de formulário unificados
     Route::get('/form-data/registros', [FormDataController::class, 'getRegistroFormData']);
+    
+        // Dashboard Analytics
+        Route::get('/dashboard/montadoras', [DashboardController::class, 'getDadosMontadora']);
+        Route::get('/dashboard/tiposervico', [DashboardController::class, 'getDadosTipoServico']);
+        Route::get('/dashboard/situacao', [DashboardController::class, 'getDadosSituacao']);
+        Route::get('/dashboard/evolucao-entradas', [DashboardController::class, 'getDadosEvolucaoEntradas']);
+        Route::get('/dashboard/evolucao-honorarios', [DashboardController::class, 'getDadosEvolucaoHonorarios']);
+        Route::get('/dashboard/evolucao-despesas', [DashboardController::class, 'getDadosEvolucaoDespesas']);
     
     // Financeiros aninhados por entrada
     Route::get('/entradas/{entrada}/financeiros', [FinanceiroController::class, 'indexByEntrada']);

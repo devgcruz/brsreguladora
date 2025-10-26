@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('colaboradores', function (Blueprint $table) {
+        Schema::create('permission_tables', function (Blueprint $table) {
             $table->id();
-            $table->string('nome', 255);
-            $table->string('cpf', 14)->unique();
-            $table->string('email', 255)->unique();
-            $table->string('celular', 20);
-            $table->string('cnh_path', 500)->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('colaboradores');
+        Schema::dropIfExists('permission_tables');
     }
 };

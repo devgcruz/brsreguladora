@@ -23,6 +23,7 @@ import ColaboradoresPage from './pages/ColaboradoresPage';
 import PosicoesPage from './pages/PosicoesPage';
 import MarcasPage from './pages/MarcasPage';
 import SeguradorasPage from './pages/SeguradorasPage';
+import DashboardAnalyticsPage from './pages/DashboardAnalyticsPage';
 
 // Components
 import DashboardLayout from './components/DashboardLayout';
@@ -116,6 +117,14 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <DashboardPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard/analytics" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardAnalyticsPage />
               </DashboardLayout>
             </ProtectedRoute>
           } />

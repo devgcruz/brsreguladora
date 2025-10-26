@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tab_cad_parceiros', function (Blueprint $table) {
-            $table->id('ID_PARCEIRO');
-            $table->string('NOME', 255);
-            $table->string('STATUS', 50);
+        Schema::create('tab_financeiro', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -24,7 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tab_cad_parceiros');
+        Schema::dropIfExists('tab_financeiro');
     }
 };
-

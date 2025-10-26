@@ -29,7 +29,7 @@ class EntradaController extends Controller
         \Log::info('📡 Headers da requisição:', $request->headers->all());
         
         $query = Entrada::with([
-            'colaborador:id_prestador,nome', 
+            'colaborador:id,nome', 
             'financeiros', 
             'judicial', 
             'pdfs', 

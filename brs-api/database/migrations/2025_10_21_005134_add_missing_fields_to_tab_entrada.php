@@ -12,11 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tab_entrada', function (Blueprint $table) {
-            // Adicionar campo ANO_MODELO após ANO_VEIC
-            $table->string('ANO_MODELO', 4)->nullable()->after('ANO_VEIC');
-            
-            // Adicionar campo NUMERO_PROCESSO após TIPO
-            $table->string('NUMERO_PROCESSO', 100)->nullable()->after('TIPO');
+            //
         });
     }
 
@@ -26,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tab_entrada', function (Blueprint $table) {
-            // Remover campos adicionados
-            $table->dropColumn(['ANO_MODELO', 'NUMERO_PROCESSO']);
+            //
         });
     }
 };

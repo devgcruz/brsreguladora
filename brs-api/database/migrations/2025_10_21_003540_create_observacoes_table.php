@@ -13,18 +13,7 @@ return new class extends Migration
     {
         Schema::create('observacoes', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('entrada_id');
-            $table->unsignedBigInteger('usuario_id');
-            $table->text('texto');
             $table->timestamps();
-
-            // Chaves estrangeiras
-            $table->foreign('entrada_id')->references('Id_Entrada')->on('tab_entrada')->onDelete('cascade');
-            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
-            
-            // Índices para performance
-            $table->index('entrada_id');
-            $table->index('usuario_id');
         });
     }
 
