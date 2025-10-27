@@ -620,6 +620,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             labelUf="UF do Sinistro"
             labelCidade="Cidade do Sinistro"
             gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+            originalValueCidade={registroData?.cidade_sinistro}
           />
 
           {/* Seção 3: Atribuição e Localização */}
@@ -682,6 +683,7 @@ const EditarRegistroModal = ({ open, onClose, onSave, onDelete, registroData }) 
             labelUf="UF (Localização)"
             labelCidade="Cidade (Localização)"
             gridBreakpoints={{ uf: { xs: 12, sm: 6 }, cidade: { xs: 12, sm: 6 } }}
+            originalValueCidade={registroData?.cidade}
           />
 
           <Grid item xs={12} sm={6} md={4}>

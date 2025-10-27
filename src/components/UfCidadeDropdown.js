@@ -27,7 +27,8 @@ const UfCidadeDropdown = ({
   labelCidade = "Cidade",
   errorUf,
   errorCidade,
-  gridBreakpoints = {}
+  gridBreakpoints = {},
+  originalValueCidade = null
 }) => {
   // Extrair breakpoints ou usar padrões
   const { uf: ufBp = { xs: 12, md: 6 }, cidade: cidadeBp = { xs: 12, md: 6 } } = gridBreakpoints;
@@ -51,7 +52,18 @@ const UfCidadeDropdown = ({
 
   // Handler interno para Cidade
   const handleCidadeChangeInternal = (event, newValue) => {
-    const newCidade = newValue ? (newValue.nome || newValue.value || newValue) : '';
+    let newCidade = '';
+    
+    if (newValue) {
+      // Se for uma string (freeSolo), usar diretamente
+      if (typeof newValue === 'string') {
+        newCidade = newValue;
+      } else {
+        // Se for um objeto, extrair o nome
+        newCidade = newValue.nome || newValue.value || '';
+      }
+    }
+    
     handleCidadeChange(newCidade);
     if (onChangeCidade) {
       onChangeCidade(newCidade);
@@ -61,8 +73,14 @@ const UfCidadeDropdown = ({
   // Encontrar a UF selecionada
   const ufSelecionadaObj = ufOptions.find(u => u.value === valueUf || u.sigla === valueUf) || null;
 
-  // Encontrar a cidade selecionada
-  const cidadeSelecionadaObj = cidadeOptions.find(c => c.value === valueCidade || c.nome === valueCidade) || null;
+  // Encontrar a cidade selecionada - com fallback para valor original do banco
+  let cidadeSelecionadaObj = cidadeOptions.find(c => c.value === valueCidade || c.nome === valueCidade) || null;
+  
+  // Se não encontrou na lista e temos um valor original do banco, usar ele como fallback
+  if (!cidadeSelecionadaObj && valueCidade) {
+    // Criar um objeto temporário com o valor original do banco
+    cidadeSelecionadaObj = { nome: valueCidade, value: valueCidade, isOriginal: true };
+  }
 
   return (
     <>
@@ -98,13 +116,19 @@ const UfCidadeDropdown = ({
       </Grid>
       <Grid item {...cidadeBp}>
         <Autocomplete
+          freeSolo
           options={cidadeOptions}
           getOptionLabel={(option) => {
             if (typeof option === 'string') return option;
+            if (!option) return '';
             return option.nome || option.value || '';
           }}
-          value={cidadeSelecionadaObj}
+          value={cidadeSelecionadaObj || null}
           onChange={handleCidadeChangeInternal}
+          isOptionEqualToValue={(option, value) => {
+            if (!option || !value) return option === value;
+            return option.nome === value.nome || option.value === value.value;
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -112,7 +136,7 @@ const UfCidadeDropdown = ({
               variant="outlined"
               size="small"
               error={!!errorCidade}
-              helperText={errorCidade}
+              helperText={errorCidade || (cidadeSelecionadaObj?.isOriginal ? "Valor original do banco de dados" : "")}
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -124,7 +148,7 @@ const UfCidadeDropdown = ({
               }}
             />
           )}
-          disabled={!valueUf || cidadeOptions.length === 0}
+          disabled={!valueUf}
           noOptionsText={!valueUf ? "Selecione uma UF" : "Nenhuma cidade encontrada"}
           loading={loadingCidade}
         />

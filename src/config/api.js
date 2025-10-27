@@ -1,6 +1,6 @@
 // Configuração da API
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+  BASE_URL: process.env.REACT_APP_API_URL,
   TIMEOUT: 10000, // 10 segundos
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000, // 1 segundo
